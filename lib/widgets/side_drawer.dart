@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../screens/products.dart';
 import '../screens/products_archive.dart';
 import '../screens/paperreels.dart';
+import '../screens/paperreels_summary.dart';
+import '../screens/paperreels_stock.dart';
 import '../screens/stocks.dart';
 import '../screens/purchaseorders.dart';
 import '../screens/productions.dart';
@@ -58,9 +60,9 @@ class _SideDrawerState extends State<SideDrawer> {
 
             // Accordion sections
             _buildAccordionItem(context, 'reels', Icons.receipt_long, 'Paper Reels', [
-              {'title': 'Summary', 'screen': PaperReelsScreen()},
+              {'title': 'Summary', 'screen': PaperReelsSummaryScreen()},
               {'title': 'Reels', 'screen': PaperReelsScreen()},
-              {'title': 'Stock', 'screen': PaperReelsScreen()},
+              {'title': 'Stock', 'screen': PaperReelStockScreen()},
             ]),
             _buildAccordionItem(context, 'po', Icons.shopping_cart, 'Purchase Order', [
               {'title': 'Purchase Orders', 'screen': PurchaseOrdersScreen()},
