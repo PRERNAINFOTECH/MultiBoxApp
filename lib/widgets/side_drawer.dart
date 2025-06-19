@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../screens/products.dart';
+import '../screens/products_archive.dart';
 import '../screens/paperreels.dart';
 import '../screens/stocks.dart';
 import '../screens/purchaseorders.dart';
@@ -75,7 +76,7 @@ class _SideDrawerState extends State<SideDrawer> {
             ]),
             _buildAccordionItem(context, 'products', Icons.all_inbox, 'Products', [
               {'title': 'Products', 'screen': ProductsScreen()},
-              {'title': 'Archive', 'screen': ProductsScreen()},
+              {'title': 'Archive', 'screen': ProductsArchiveScreen()},
             ]),
             _buildAccordionItem(context, 'challans', Icons.description, 'Challan', [
               {'title': 'Challans', 'screen': ChallansScreen()},
