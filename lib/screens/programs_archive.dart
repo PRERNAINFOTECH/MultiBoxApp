@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
 
-class ProgramsScreen extends StatefulWidget {
-  const ProgramsScreen({super.key});
+class ProgramsArchiveScreen extends StatefulWidget {
+  const ProgramsArchiveScreen({super.key});
 
   @override
-  State<ProgramsScreen> createState() => _ProgramsScreenState();
+  State<ProgramsArchiveScreen> createState() => _ProgramsScreenState();
 }
 
-class _ProgramsScreenState extends State<ProgramsScreen> {
+class _ProgramsScreenState extends State<ProgramsArchiveScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -34,19 +34,6 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
           padding: const EdgeInsets.all(16.0),
           child: Column(
             children: [
-              Align(
-                alignment: Alignment.centerLeft,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF4A68F2),
-                    foregroundColor: Colors.white,
-                  ),
-                  onPressed: () {},
-                  child: const Text("Add Program"),
-                ),
-              ),
-              const SizedBox(height: 16),
-
               // Product Card
               Card(
                 color: Colors.white,
@@ -86,18 +73,10 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.orange),
+                                  side: const BorderSide(color: Colors.green),
                                 ),
                                 onPressed: () {},
-                                child: const Icon(Icons.edit, color: Colors.orange, size: 20),
-                              ),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.red),
-                                ),
-                                onPressed: () {},
-                                child: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                child: const Icon(Icons.restore_from_trash, color: Colors.green, size: 20),
                               ),
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(

@@ -9,6 +9,7 @@ import '../screens/purchaseorders.dart';
 import '../screens/purchaseorders_archive.dart';
 import '../screens/productions.dart';
 import '../screens/programs.dart';
+import '../screens/programs_archive.dart';
 import '../screens/challans.dart';
 
 class SideDrawer extends StatefulWidget {
@@ -75,7 +76,7 @@ class _SideDrawerState extends State<SideDrawer> {
             ]),
             _buildAccordionItem(context, 'programs', Icons.event_note, 'Program', [
               {'title': 'Programs', 'screen': ProgramsScreen()},
-              {'title': 'Archive', 'screen': ProgramsScreen()},
+              {'title': 'Archive', 'screen': ProgramsArchiveScreen()},
             ]),
             _buildAccordionItem(context, 'products', Icons.all_inbox, 'Products', [
               {'title': 'Products', 'screen': ProductsScreen()},
