@@ -117,7 +117,7 @@ class PurchaseOrdersArchiveDetailScreen extends StatelessWidget {
                                   side: const BorderSide(color: Colors.green),
                                   padding: const EdgeInsets.all(8),
                                 ),
-                                onPressed: () {},
+                                onPressed: () => _showRestoreConfirmationDialog(context),
                                 child: const Icon(Icons.restore_from_trash, size: 20, color: Colors.green),
                               ),
                             ],
@@ -157,4 +157,56 @@ class PurchaseOrdersArchiveDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _showRestoreConfirmationDialog(BuildContext context) async {
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.restore_from_trash, color: Colors.green, size: 40),
+              const SizedBox(height: 10),
+              const Text(
+                "Restore Purchase Order?",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Do you want to restore this purchase order? It will be moved back to the active list.",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Restore"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

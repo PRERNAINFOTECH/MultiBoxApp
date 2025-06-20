@@ -117,7 +117,7 @@ class PurchaseOrdersDetailScreen extends StatelessWidget {
                                   side: const BorderSide(color: Colors.grey),
                                   padding: const EdgeInsets.all(8),
                                 ),
-                                onPressed: () {},
+                                onPressed: () => _showDispatchDialog(context),
                                 child: const Icon(Icons.local_shipping, size: 20),
                               ),
                               const SizedBox(width: 8),
@@ -127,7 +127,7 @@ class PurchaseOrdersDetailScreen extends StatelessWidget {
                                   side: const BorderSide(color: Colors.red),
                                   padding: const EdgeInsets.all(8),
                                 ),
-                                onPressed: () {},
+                                onPressed: () => _showDeleteConfirmationDialog(context),
                                 child: const Icon(Icons.delete, size: 20, color: Colors.red),
                               ),
                             ],
@@ -167,4 +167,198 @@ class PurchaseOrdersDetailScreen extends StatelessWidget {
       ),
     );
   }
+}
+
+Future<void> _showDispatchDialog(BuildContext context) async {
+  final TextEditingController dispatchDateController = TextEditingController();
+  final TextEditingController dispatchQtyController = TextEditingController();
+  final TextEditingController partitionQtyController = TextEditingController();
+
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.8,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Header
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          "Add Dispatch Details",
+                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Dispatch Date
+                    TextField(
+                      controller: dispatchDateController,
+                      readOnly: true,
+                      decoration: const InputDecoration(
+                        labelText: "Dispatch Date",
+                        hintText: "mm/dd/yyyy",
+                        prefixIcon: Icon(Icons.calendar_today),
+                        border: OutlineInputBorder(),
+                      ),
+                      onTap: () async {
+                        final picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2100),
+                        );
+                        if (picked != null) {
+                          dispatchDateController.text =
+                              "${picked.month}/${picked.day}/${picked.year}";
+                        }
+                      },
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Dispatch Quantity
+                    TextField(
+                      controller: dispatchQtyController,
+                      decoration: const InputDecoration(
+                        labelText: "Dispatch Quantity",
+                        hintText: "Enter quantity",
+                        border: OutlineInputBorder(),
+                      ),
+                      keyboardType: TextInputType.number,
+                    ),
+
+                    const SizedBox(height: 15),
+
+                    // Partition Dispatch Row
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(
+                          width: 70,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 12),
+                            child: Text(
+                              "vertical",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: TextField(
+                            controller: partitionQtyController,
+                            decoration: const InputDecoration(
+                              labelText: "Partition Dispatch",
+                              hintText: "Quantity for vertical",
+                              border: OutlineInputBorder(),
+                            ),
+                            keyboardType: TextInputType.number,
+                          ),
+                        ),
+                      ],
+                    ),
+
+                    const SizedBox(height: 25),
+
+                    // Buttons
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Close"),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Handle Save logic
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4F6EF7),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text("Save Dispatch"),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _showDeleteConfirmationDialog(BuildContext context) async {
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.all(20.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Colors.red, size: 40),
+              const SizedBox(height: 10),
+              const Text(
+                "Delete Purchase Order?",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                "Are you sure you want to delete this purchase order? This action cannot be undone.",
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                  const SizedBox(width: 8),
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.red,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Delete"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
