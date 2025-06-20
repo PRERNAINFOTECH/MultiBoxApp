@@ -7,7 +7,7 @@ class PaperReelStockScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final ScrollController _scrollController = ScrollController();
+    final ScrollController scrollController = ScrollController();
 
     return Scaffold(
       drawer: const SideDrawer(),
@@ -17,7 +17,7 @@ class PaperReelStockScreen extends StatelessWidget {
       ),
       backgroundColor: const Color(0xFFF8F9FA),
       body: ScrollToTopWrapper(
-        scrollController: _scrollController,
+        scrollController: scrollController,
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),

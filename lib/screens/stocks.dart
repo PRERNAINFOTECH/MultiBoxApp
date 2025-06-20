@@ -64,7 +64,12 @@ class _StocksScreenState extends State<StocksScreen> {
                   Align(
                     alignment: Alignment.centerLeft,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () => _showEditDialog(
+                        context,
+                        name,
+                        stock: boxCount,
+                        vertical: vertical ?? 0,
+                      ),
                       style: OutlinedButton.styleFrom(
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(10),
@@ -77,7 +82,20 @@ class _StocksScreenState extends State<StocksScreen> {
                   Align(
                     alignment: Alignment.center,
                     child: OutlinedButton.icon(
-                      onPressed: () {},
+                      onPressed: () {
+                        _showHistoryDialog(
+                          context,
+                          name,
+                          historyData: [
+                            {
+                              "date": "2025-06-27",
+                              "quantity": 2000,
+                              "poBy": "Target",
+                            },
+                            // Add more entries here if needed
+                          ],
+                        );
+                      },
                       icon: const Icon(Icons.history),
                       label: const Text("History"),
                       style: OutlinedButton.styleFrom(foregroundColor: Colors.black),
@@ -87,7 +105,18 @@ class _StocksScreenState extends State<StocksScreen> {
                   Align(
                     alignment: Alignment.centerRight,
                     child: OutlinedButton(
-                      onPressed: () {},
+                      onPressed: () {
+                        _showDeleteConfirmationDialog(
+                          context,
+                          name,
+                          () {
+                            // Actual delete logic here
+                            setState(() {
+                              items.removeWhere((item) => item['name'] == name);
+                            });
+                          },
+                        );
+                      },
                       style: OutlinedButton.styleFrom(
                         shape: const CircleBorder(),
                         padding: const EdgeInsets.all(10),
@@ -150,10 +179,17 @@ class _StocksScreenState extends State<StocksScreen> {
                   // Add Box Button
                   ElevatedButton.icon(
                     onPressed: () {
-                      // Implement Add Box logic
+                      _showAddStockDialog(
+                        context,
+                        items.map((e) => e['name'].toString()).toList(),
+                        (product, quantity) {
+                          setState(() {
+                            items.add({"name": product, "box": quantity});
+                          });
+                        },
+                      );
                     },
-                    icon: const Icon(Icons.add_box),
-                    label: const Text("Add Box"),
+                    label: const Text("Add Stock"),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF4A68F2),
                       foregroundColor: Colors.white,
@@ -186,4 +222,343 @@ class _StocksScreenState extends State<StocksScreen> {
       ),
     );
   }
+}
+
+Future<void> _showAddStockDialog(
+  BuildContext context,
+  List<String> productOptions,
+  void Function(String product, int quantity) onAdd,
+) async {
+  final TextEditingController quantityController = TextEditingController();
+  String? selectedProduct;
+
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Add New Stock",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                DropdownButtonFormField<String>(
+                  decoration: const InputDecoration(
+                    labelText: 'Product Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  hint: const Text("Select a product"),
+                  value: selectedProduct,
+                  onChanged: (value) {
+                    selectedProduct = value;
+                  },
+                  items: productOptions
+                      .map(
+                        (product) => DropdownMenuItem<String>(
+                          value: product,
+                          child: Text(product),
+                        ),
+                      )
+                      .toList(),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: quantityController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Stock Quantity',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close"),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        if (selectedProduct != null && quantityController.text.isNotEmpty) {
+                          final quantity = int.tryParse(quantityController.text);
+                          if (quantity != null) {
+                            onAdd(selectedProduct!, quantity);
+                            Navigator.pop(context);
+                          }
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A68F2),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text("Add Stock"),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _showEditDialog(
+  BuildContext context,
+  String productName, {
+  int stock = 0,
+  String manualDate = '',
+  String partyName = 'Target',
+  int vertical = 0,
+}) async {
+  final TextEditingController stockController = TextEditingController(text: stock.toString());
+  final TextEditingController manualDateController = TextEditingController(text: manualDate);
+  final TextEditingController partyNameController = TextEditingController(text: partyName);
+  final TextEditingController verticalController = TextEditingController(text: vertical.toString());
+
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.9,
+              ),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      "Edit Quantity for $productName",
+                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: stockController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Stock Quantity',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: manualDateController,
+                      readOnly: true,
+                      decoration: const InputDecoration(
+                        labelText: 'Manual Date',
+                        border: OutlineInputBorder(),
+                        suffixIcon: Icon(Icons.calendar_today),
+                      ),
+                      onTap: () async {
+                        final DateTime? picked = await showDatePicker(
+                          context: context,
+                          initialDate: DateTime.now(),
+                          firstDate: DateTime(2000),
+                          lastDate: DateTime(2101),
+                        );
+                        if (picked != null) {
+                          manualDateController.text = "${picked.toLocal()}".split(' ')[0];
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: partyNameController,
+                      decoration: const InputDecoration(
+                        labelText: 'Party Name',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: verticalController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                        labelText: 'Vertical Quantity',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        TextButton(
+                          onPressed: () => Navigator.pop(context),
+                          child: const Text("Close"),
+                        ),
+                        const SizedBox(width: 10),
+                        ElevatedButton(
+                          onPressed: () {
+                            // Save logic here
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text("Save changes"),
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            );
+          },
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _showDeleteConfirmationDialog(
+  BuildContext context,
+  String productName,
+  VoidCallback onConfirmDelete,
+) async {
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        title: const Text("Confirm Delete"),
+        content: Text("Are you sure you want to delete '$productName'?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.pop(context); // Close dialog
+              onConfirmDelete(); // Trigger delete callback
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Delete"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> _showHistoryDialog(
+  BuildContext context,
+  String productName, {
+  required List<Map<String, dynamic>> historyData,
+}) async {
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        backgroundColor: Colors.white,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxWidth: MediaQuery.of(context).size.width * 0.9,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  productName,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Table(
+                  border: TableBorder.all(color: Colors.white),
+                  columnWidths: const {
+                    0: FlexColumnWidth(1.2),
+                    1: FlexColumnWidth(1),
+                    2: FlexColumnWidth(1.2),
+                  },
+                  children: [
+                    const TableRow(
+                      decoration: BoxDecoration(color: Color(0xFFF1F3F5)),
+                      children: [
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text('Dispatch Date', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text('Dispatch Quantity', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.all(8.0),
+                          child: Text('PO Given By', style: TextStyle(fontWeight: FontWeight.bold)),
+                        ),
+                      ],
+                    ),
+                    ...historyData.map(
+                      (entry) => TableRow(
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(entry['date'] ?? '-'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(entry['quantity']?.toString() ?? '0'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(6.0),
+                            child: Text(entry['poBy'] ?? '-'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFE0E0E0),
+                      foregroundColor: Colors.black,
+                    ),
+                    child: const Text("Close"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
 }
