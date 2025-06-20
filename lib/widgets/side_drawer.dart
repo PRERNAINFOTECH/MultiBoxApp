@@ -51,8 +51,8 @@ class _SideDrawerState extends State<SideDrawer> {
 
             // Stock item without accordion
             ListTile(
-              leading: const Icon(Icons.inventory, color: Colors.white70),
-              title: const Text('Stock', style: TextStyle(color: Colors.white70)),
+              leading: const Icon(Icons.inventory, color: Colors.white),
+              title: const Text('Stock', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
@@ -84,8 +84,8 @@ class _SideDrawerState extends State<SideDrawer> {
               {'title': 'Archive', 'screen': ProductsArchiveScreen()},
             ]),
             _buildAccordionItem(context, 'challans', Icons.description, 'Challan', [
+              {'title': 'Create Challan', 'screen': ChallansScreen()},
               {'title': 'Challans', 'screen': ChallansScreen()},
-              {'title': 'Archive', 'screen': ChallansScreen()},
             ]),
 
             const SizedBox(height: 10),
@@ -99,7 +99,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   decoration: BoxDecoration(
                     color: Colors.white10,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.white60, width: 1),
+                    border: Border.all(color: Colors.white, width: 1),
                   ),
                   child: const Icon(Icons.arrow_back_ios, color: Colors.white),
                 ),
@@ -124,14 +124,14 @@ class _SideDrawerState extends State<SideDrawer> {
     return Theme(
       data: Theme.of(context).copyWith(
         dividerColor: Colors.transparent,
-        unselectedWidgetColor: Colors.white70,
+        unselectedWidgetColor: Colors.white,
       ),
       child: ExpansionTile(
         key: PageStorageKey(id),
-        leading: Icon(icon, color: Colors.white70),
-        title: Text(title, style: const TextStyle(color: Colors.white70)),
+        leading: Icon(icon, color: Colors.white),
+        title: Text(title, style: const TextStyle(color: Colors.white)),
         iconColor: Colors.white,
-        collapsedIconColor: Colors.white70,
+        collapsedIconColor: Colors.white,
         initiallyExpanded: isExpanded,
         onExpansionChanged: (expanded) {
           setState(() {
