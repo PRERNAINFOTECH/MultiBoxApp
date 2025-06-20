@@ -6,6 +6,7 @@ import '../screens/paperreels_summary.dart';
 import '../screens/paperreels_stock.dart';
 import '../screens/stocks.dart';
 import '../screens/purchaseorders.dart';
+import '../screens/purchaseorders_archive.dart';
 import '../screens/productions.dart';
 import '../screens/programs.dart';
 import '../screens/challans.dart';
@@ -66,7 +67,7 @@ class _SideDrawerState extends State<SideDrawer> {
             ]),
             _buildAccordionItem(context, 'po', Icons.shopping_cart, 'Purchase Order', [
               {'title': 'Purchase Orders', 'screen': PurchaseOrdersScreen()},
-              {'title': 'Archive', 'screen': PurchaseOrdersScreen()},
+              {'title': 'Archive', 'screen': PurchaseOrdersArchiveScreen()},
             ]),
             _buildAccordionItem(context, 'production', Icons.build, 'Production', [
               {'title': 'Productions', 'screen': ProductionsScreen()},

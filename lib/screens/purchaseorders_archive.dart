@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import '../widgets/side_drawer.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
-import '../screens/purchaseorders_detail.dart';
+import '../screens/purchaseorders_archive_detail.dart';
 
-class PurchaseOrdersScreen extends StatefulWidget {
-  const PurchaseOrdersScreen({super.key});
+class PurchaseOrdersArchiveScreen extends StatefulWidget {
+  const PurchaseOrdersArchiveScreen({super.key});
 
   @override
-  State<PurchaseOrdersScreen> createState() => _PurchaseOrdersScreenState();
+  State<PurchaseOrdersArchiveScreen> createState() => _PurchaseOrdersScreenState();
 }
 
-class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
+class _PurchaseOrdersScreenState extends State<PurchaseOrdersArchiveScreen> {
   final ScrollController _scrollController = ScrollController();
 
   final List<String> companies = [
@@ -48,7 +48,7 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const PurchaseOrdersDetailScreen(),
+                  MaterialPageRoute(builder: (context) => const PurchaseOrdersArchiveDetailScreen(),
                   ),
                 );
               },
@@ -73,34 +73,12 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text("PO's"),
+        title: const Text("Archive PO's"),
       ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,
         child: Column(
           children: [
-            // Add Purchase Order Button
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              child: Row(
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      // Handle Add Purchase Order
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF4F6EF7),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                    ),
-                    child: const Text("Add Purchase Order"),
-                  ),
-                ],
-              ),
-            ),
             // Purchase Orders List
             Expanded(
               child: ListView.builder(

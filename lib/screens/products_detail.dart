@@ -128,6 +128,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
     required List<Widget> children,
   }) {
     return Card(
+      color: Colors.white,
       elevation: 2,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
