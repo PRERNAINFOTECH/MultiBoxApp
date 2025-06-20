@@ -58,7 +58,9 @@ class _ProductionsScreenState extends State<ProductionsArchiveScreen> {
                               side: const BorderSide(color: Colors.green),
                               padding: const EdgeInsets.all(10),
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              _showRestoreConfirmationDialog(context);
+                            },
                             child: const Icon(Icons.restore_from_trash, color: Colors.green, size: 20),
                           ),
                         ],
@@ -122,4 +124,29 @@ class _ProductionsScreenState extends State<ProductionsArchiveScreen> {
       ),
     );
   }
+}
+
+Future<void> _showRestoreConfirmationDialog(BuildContext context) async {
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: const Text("Restore Production"),
+        content: const Text("Are you sure you want to restore this production?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green),
+            child: const Text("Restore"),
+          ),
+        ],
+      );
+    },
+  );
 }
