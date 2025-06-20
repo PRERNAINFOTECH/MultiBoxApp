@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
 
-class ProductionsScreen extends StatefulWidget {
-  const ProductionsScreen({super.key});
+class ProductionsArchiveScreen extends StatefulWidget {
+  const ProductionsArchiveScreen({super.key});
 
   @override
-  State<ProductionsScreen> createState() => _ProductionsScreenState();
+  State<ProductionsArchiveScreen> createState() => _ProductionsScreenState();
 }
 
-class _ProductionsScreenState extends State<ProductionsScreen> {
+class _ProductionsScreenState extends State<ProductionsArchiveScreen> {
   final ScrollController _scrollController = ScrollController();
 
   @override
@@ -23,7 +23,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
     return Scaffold(
       drawer: const SideDrawer(),
       appBar: AppBar(
-        title: const Text("Productions"),
+        title: const Text("Archive Productions"),
         backgroundColor: Colors.white,
       ),
       backgroundColor: const Color(0xFFF8F9FA),
@@ -35,16 +35,6 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4A68F2),
-                  foregroundColor: Colors.white,
-                ),
-                onPressed: () {},
-                child: const Text("Add Production Line"),
-              ),
-              const SizedBox(height: 16),
-
               // Product Card
               Card(
                 color: Colors.white,
@@ -65,11 +55,11 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
                               shape: const CircleBorder(),
-                              side: const BorderSide(color: Colors.red),
+                              side: const BorderSide(color: Colors.green),
                               padding: const EdgeInsets.all(10),
                             ),
                             onPressed: () {},
-                            child: const Icon(Icons.delete, color: Colors.red, size: 20),
+                            child: const Icon(Icons.restore_from_trash, color: Colors.green, size: 20),
                           ),
                         ],
                       ),
@@ -92,15 +82,6 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
                                   SizedBox(height: 4),
                                   Text("2500", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                 ],
-                              ),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: const CircleBorder(),
-                                  side: const BorderSide(color: Color(0xFF4A68F2)),
-                                  padding: const EdgeInsets.all(10),
-                                ),
-                                onPressed: () {},
-                                child: const Icon(Icons.edit, color: Color(0xFF4A68F2), size: 20),
                               ),
                             ],
                           ),
@@ -126,15 +107,6 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
                                   Text("6016 - 41.0 - 570kg", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                   Text("6016 - 41.0 - 570kg", style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
                                 ],
-                              ),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.green),
-                                  padding: const EdgeInsets.all(10),
-                                ),
-                                onPressed: () {},
-                                child: const Icon(Icons.add, color: Colors.green, size: 20),
                               ),
                             ],
                           ),

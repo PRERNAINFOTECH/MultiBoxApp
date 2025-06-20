@@ -71,7 +71,7 @@ class _ProductsScreenState extends State<ProductsArchiveScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: const Text("Products"),
+        title: const Text("Archive Products"),
       ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,

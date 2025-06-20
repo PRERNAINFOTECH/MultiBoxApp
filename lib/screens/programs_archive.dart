@@ -23,7 +23,7 @@ class _ProgramsScreenState extends State<ProgramsArchiveScreen> {
     return Scaffold(
       drawer: const SideDrawer(),
       appBar: AppBar(
-        title: const Text("Programs"),
+        title: const Text("Archive Programs"),
         backgroundColor: Colors.white,
       ),
       backgroundColor: const Color(0xFFF8F9FA),

@@ -8,6 +8,7 @@ import '../screens/stocks.dart';
 import '../screens/purchaseorders.dart';
 import '../screens/purchaseorders_archive.dart';
 import '../screens/productions.dart';
+import '../screens/productions_archive.dart';
 import '../screens/programs.dart';
 import '../screens/programs_archive.dart';
 import '../screens/challans.dart';
@@ -72,7 +73,7 @@ class _SideDrawerState extends State<SideDrawer> {
             ]),
             _buildAccordionItem(context, 'production', Icons.build, 'Production', [
               {'title': 'Productions', 'screen': ProductionsScreen()},
-              {'title': 'Archive', 'screen': ProductionsScreen()},
+              {'title': 'Archive', 'screen': ProductionsArchiveScreen()},
             ]),
             _buildAccordionItem(context, 'programs', Icons.event_note, 'Program', [
               {'title': 'Programs', 'screen': ProgramsScreen()},
