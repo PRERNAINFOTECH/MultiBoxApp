@@ -61,7 +61,7 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
               children: [
                 OutlinedButton(
                   onPressed: () {
-                    // Edit logic
+                    _showEditPaperReelDialog(context, reel);
                   },
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(28, 28),
@@ -72,14 +72,22 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                 ),
                 OutlinedButton(
                   onPressed: () {
-                    // Delete logic
+                    _showDeleteReelDialog(
+                      context,
+                      reel["RNo"],
+                      isHighlighted: highlight,
+                    );
                   },
                   style: OutlinedButton.styleFrom(
                     minimumSize: const Size(28, 28),
                     padding: EdgeInsets.zero,
-                    side: const BorderSide(color: Colors.red),
+                    side: BorderSide(color: highlight ? Colors.green : Colors.red),
                   ),
-                  child: const Icon(Icons.delete, size: 16, color: Colors.red),
+                  child: Icon(
+                    highlight ? Icons.restore_from_trash : Icons.delete,
+                    size: 16,
+                    color: highlight ? Colors.green : Colors.red,
+                  ),
                 ),
               ],
             ),
@@ -132,4 +140,172 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
       ),
     );
   }
+}
+
+Future<void> _showEditPaperReelDialog(BuildContext context, Map<String, dynamic> reel) async {
+  final TextEditingController supplierController = TextEditingController(text: reel["Supplier"] ?? "Umason");
+  final TextEditingController reelNoController = TextEditingController(text: reel["RNo"]?.toString() ?? "");
+  final TextEditingController bfController = TextEditingController(text: reel["BF"]?.toString() ?? "");
+  final TextEditingController gsmController = TextEditingController(text: reel["GSM"]?.toString() ?? "");
+  final TextEditingController sizeController = TextEditingController(text: reel["Size"]?.toString() ?? "");
+  final TextEditingController weightController = TextEditingController(text: reel["Weight"]?.toString() ?? "");
+
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (context) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxWidth: MediaQuery.of(context).size.width * 0.9),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  "Edit Paper Reel",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+                ),
+                const Divider(),
+                const SizedBox(height: 10),
+                TextField(
+                  controller: supplierController,
+                  decoration: const InputDecoration(
+                    labelText: 'Supplier',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: reelNoController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Reel Number',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: bfController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'BF',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: gsmController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'GSM',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: sizeController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Size (Inch)',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: weightController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    labelText: 'Weight',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A68F2),
+                      foregroundColor: Colors.white,
+                    ),
+                    child: const Text("Save Changes"),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
+Future<void> _showDeleteReelDialog(BuildContext context, int reelNumber, {bool isHighlighted = false}) async {
+  final String actionText = isHighlighted ? "Make Unused" : "Make Used";
+  final Color buttonColor = isHighlighted ? Colors.green : Colors.red;
+
+  await showDialog(
+    context: context,
+    barrierDismissible: true,
+    builder: (BuildContext context) {
+      return Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 80),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                "Delete Paper Reel",
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+              ),
+              const Divider(),
+              const SizedBox(height: 10),
+              RichText(
+                text: TextSpan(
+                  style: const TextStyle(color: Colors.black, fontSize: 14),
+                  children: [
+                    const TextSpan(text: "Are you sure you want to make the reel "),
+                    TextSpan(
+                      text: "$reelNumber",
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    TextSpan(text: isHighlighted ? " unused?" : " used?"),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 20),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  ElevatedButton(
+                    onPressed: () {
+                      // Handle toggle logic here (used ↔ unused)
+                      Navigator.pop(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      foregroundColor: Colors.white,
+                    ),
+                    child: Text(actionText),
+                  ),
+                  const SizedBox(width: 10),
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cancel"),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
