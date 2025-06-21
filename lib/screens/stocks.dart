@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
+import '../widgets/custom_app_bar.dart';
 
 class StocksScreen extends StatefulWidget {
-  const StocksScreen({super.key, required this.title});
-  final String title;
+  const StocksScreen({super.key});
 
   @override
   State<StocksScreen> createState() => _StocksScreenState();
@@ -149,7 +149,10 @@ class _StocksScreenState extends State<StocksScreen> {
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
         backgroundColor: Colors.white,
-        title: Text(widget.title),
+        title: Text("Stocks"),
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,

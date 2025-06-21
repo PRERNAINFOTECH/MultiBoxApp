@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ProductsDetailScreen extends StatefulWidget {
   final String productName;
@@ -232,7 +233,12 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       drawer: const SideDrawer(),
-      appBar: AppBar(title: Text(widget.productName)),
+      appBar: AppBar(
+        title: Text(widget.productName),
+        actions: const [
+          AppBarMenu(),
+        ],
+      ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,
         child: SingleChildScrollView(

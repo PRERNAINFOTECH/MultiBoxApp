@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/side_drawer.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
+import '../widgets/custom_app_bar.dart';
 
 class PurchaseOrdersDetailScreen extends StatelessWidget {
   const PurchaseOrdersDetailScreen({super.key});
@@ -16,6 +17,9 @@ class PurchaseOrdersDetailScreen extends StatelessWidget {
         title: const Text("PO's Detail"),
         backgroundColor: Colors.white,
         centerTitle: true,
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       body: ScrollToTopWrapper(
         scrollController: scrollController,

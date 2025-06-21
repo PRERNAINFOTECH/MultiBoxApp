@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
           brightness: Brightness.light,
         ).copyWith(surfaceTint: Colors.transparent), // Removes overlay effect
       ),
-      home: const StocksScreen(title: "Stocks",),
+      home: const StocksScreen(),
     );
   }
 }

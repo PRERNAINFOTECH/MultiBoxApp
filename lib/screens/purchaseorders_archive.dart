@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/side_drawer.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../screens/purchaseorders_archive_detail.dart';
+import '../widgets/custom_app_bar.dart';
 
 class PurchaseOrdersArchiveScreen extends StatefulWidget {
   const PurchaseOrdersArchiveScreen({super.key});
@@ -74,6 +75,9 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersArchiveScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text("Archive PO's"),
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,

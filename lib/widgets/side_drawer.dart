@@ -56,7 +56,7 @@ class _SideDrawerState extends State<SideDrawer> {
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => StocksScreen(title: "Stocks")),
+                  MaterialPageRoute(builder: (_) => StocksScreen()),
                 );
               },
             ),

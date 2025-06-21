@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
+import '../widgets/custom_app_bar.dart';
 
 class PaperReelsScreen extends StatefulWidget {
   const PaperReelsScreen({super.key});
@@ -145,6 +146,9 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
       appBar: AppBar(
         title: const Text("Paper Reels"),
         backgroundColor: Colors.white,
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       backgroundColor: const Color(0xFFF8F9FA),
       body: ScrollToTopWrapper(

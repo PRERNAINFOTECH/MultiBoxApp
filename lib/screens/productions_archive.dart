@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ProductionsArchiveScreen extends StatefulWidget {
   const ProductionsArchiveScreen({super.key});
@@ -25,6 +26,9 @@ class _ProductionsScreenState extends State<ProductionsArchiveScreen> {
       appBar: AppBar(
         title: const Text("Archive Productions"),
         backgroundColor: Colors.white,
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       backgroundColor: const Color(0xFFF8F9FA),
       body: ScrollToTopWrapper(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
 import '../screens/products_archive_details.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ProductsArchiveScreen extends StatefulWidget {
   const ProductsArchiveScreen({super.key});
@@ -72,6 +73,9 @@ class _ProductsScreenState extends State<ProductsArchiveScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text("Archive Products"),
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,

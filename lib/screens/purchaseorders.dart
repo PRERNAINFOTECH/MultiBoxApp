@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../widgets/side_drawer.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../screens/purchaseorders_detail.dart';
+import '../widgets/custom_app_bar.dart';
 
 class PurchaseOrdersScreen extends StatefulWidget {
   const PurchaseOrdersScreen({super.key});
@@ -74,6 +75,9 @@ class _PurchaseOrdersScreenState extends State<PurchaseOrdersScreen> {
       appBar: AppBar(
         backgroundColor: Colors.white,
         title: const Text("PO's"),
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       body: ScrollToTopWrapper(
         scrollController: _scrollController,

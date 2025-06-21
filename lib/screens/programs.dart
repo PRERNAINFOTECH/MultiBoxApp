@@ -7,6 +7,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
+import '../widgets/custom_app_bar.dart';
 
 class ProgramsScreen extends StatefulWidget {
   const ProgramsScreen({super.key});
@@ -33,6 +34,9 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       appBar: AppBar(
         title: const Text("Programs"),
         backgroundColor: Colors.white,
+        actions: const [
+          AppBarMenu(),
+        ],
       ),
       backgroundColor: const Color(0xFFF8F9FA),
       body: ScrollToTopWrapper(
