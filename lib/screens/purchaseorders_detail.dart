@@ -114,11 +114,11 @@ class PurchaseOrdersDetailScreen extends StatelessWidget {
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
                                   shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.grey),
+                                  side: const BorderSide(color: Colors.blueGrey),
                                   padding: const EdgeInsets.all(8),
                                 ),
                                 onPressed: () => _showDispatchDialog(context),
-                                child: const Icon(Icons.local_shipping, size: 20),
+                                child: const Icon(Icons.local_shipping, size: 20, color: Colors.blueGrey,),
                               ),
                               const SizedBox(width: 8),
                               OutlinedButton(

@@ -90,10 +90,10 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
                                   OutlinedButton(
                                     style: OutlinedButton.styleFrom(
                                       shape: const CircleBorder(),
-                                      side: const BorderSide(color: Colors.green),
+                                      side: const BorderSide(color: Colors.blueAccent),
                                     ),
                                     onPressed: _shareProgramCard,
-                                    child: const Icon(Icons.share, color: Colors.green, size: 20),
+                                    child: const Icon(Icons.share, color: Colors.blueAccent, size: 20),
                                   ),
                                 ],
                               ),
