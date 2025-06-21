@@ -1,4 +1,10 @@
+import 'dart:io';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+import 'package:flutter/rendering.dart';
 import 'package:flutter/material.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
 
@@ -11,6 +17,8 @@ class ProgramsScreen extends StatefulWidget {
 
 class _ProgramsScreenState extends State<ProgramsScreen> {
   final ScrollController _scrollController = ScrollController();
+  final GlobalKey _cardKey = GlobalKey();
+  bool _hideButtons = false;
 
   @override
   void dispose() {
@@ -41,119 +49,137 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                     backgroundColor: const Color(0xFF4A68F2),
                     foregroundColor: Colors.white,
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    _showAddProgramDialog(context);
+                  },
                   child: const Text("Add Program"),
                 ),
               ),
               const SizedBox(height: 16),
 
               // Product Card
-              Card(
-                color: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                elevation: 3,
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Row: Product Name and Quantity
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: const [
-                          Text(
-                            "Product 1",
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            "Quantity - 2500",
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-
-                      // Row: Date and Action Buttons
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            "2025-06-20",
-                            style: TextStyle(color: Colors.grey),
-                          ),
-                          Row(
-                            children: [
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.orange),
-                                ),
-                                onPressed: () {},
-                                child: const Icon(Icons.edit, color: Colors.orange, size: 20),
-                              ),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.red),
-                                ),
-                                onPressed: () {},
-                                child: const Icon(Icons.delete, color: Colors.red, size: 20),
-                              ),
-                              OutlinedButton(
-                                style: OutlinedButton.styleFrom(
-                                  shape: const CircleBorder(),
-                                  side: const BorderSide(color: Colors.green),
-                                ),
-                                onPressed: () {},
-                                child: const Icon(Icons.share, color: Colors.green, size: 20),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-
-                      const Divider(height: 24),
-
-                      // Product Details (2-column layout)
-                      _buildTwoColumnSection([
-                        ["SIZE", "50X50/2"],
-                        ["CODE", "CS-201"],
-                        ["OD", "455X285X305"],
-                        ["GSM", "140 (120) 2/18"],
-                        ["COLOUR", "Black"],
-                        ["WEIGHT", "450"],
-                      ]),
-
-                      const SizedBox(height: 16),
-
-                      // Note
-                      Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.blue.shade50,
-                          borderRadius: BorderRadius.circular(8),
+              RepaintBoundary(
+                key: _cardKey,
+                child: Card(
+                  color: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 3,
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Row: Product Name and Quantity
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: const [
+                            Text(
+                              "Product 1",
+                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              "Quantity - 2500",
+                              style: TextStyle(fontSize: 16),
+                            ),
+                          ],
                         ),
-                        child: const Text(
-                          "Note:\nYou may increase till 2650 quantity of boxes.",
-                          style: TextStyle(fontWeight: FontWeight.w500),
+                        const SizedBox(height: 4),
+
+                        // Row: Date and Action Buttons
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "2025-06-20",
+                              style: TextStyle(color: Colors.grey),
+                            ),
+                            if (!_hideButtons)
+                              Row(
+                                children: [
+                                  OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: const CircleBorder(),
+                                      side: const BorderSide(color: Colors.orange),
+                                    ),
+                                    onPressed: () {
+                                      _showEditProgramDialog(
+                                        context,
+                                        productName: "Product 1",
+                                        quantity: "5000",
+                                        programDate: DateTime(2025, 6, 21),
+                                        notes: "You can go upto 5250",
+                                      );
+                                    },
+                                    child: const Icon(Icons.edit, color: Colors.orange, size: 20),
+                                  ),
+                                  OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: const CircleBorder(),
+                                      side: const BorderSide(color: Colors.red),
+                                    ),
+                                    onPressed: () {
+                                      _showDeleteConfirmationDialog(context, () {
+                                        // Delete logic here
+                                      });
+                                    },
+                                    child: const Icon(Icons.delete, color: Colors.red, size: 20),
+                                  ),
+                                  OutlinedButton(
+                                    style: OutlinedButton.styleFrom(
+                                      shape: const CircleBorder(),
+                                      side: const BorderSide(color: Colors.green),
+                                    ),
+                                    onPressed: _shareProgramCard,
+                                    child: const Icon(Icons.share, color: Colors.green, size: 20),
+                                  ),
+                                ],
+                              ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 16),
 
-                      // Partitions
-                      const Text("Partitions", style: TextStyle(fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 12),
+                        const Divider(height: 24),
 
-                      _buildTwoColumnSection([
-                        ["SIZE", "423X15"],
-                        ["OD", "25x35x33"],
-                        ["CUTS", "D - 2, L - 5"],
-                        ["TYPE", "Vertical"],
-                        ["PLY", "3 Ply"],
-                        ["WEIGHT", "50"],
-                      ]),
-                    ],
+                        // Product Details (2-column layout)
+                        _buildTwoColumnSection([
+                          ["SIZE", "50X50/2"],
+                          ["CODE", "CS-201"],
+                          ["OD", "455X285X305"],
+                          ["GSM", "140 (120) 2/18"],
+                          ["COLOUR", "Black"],
+                          ["WEIGHT", "450"],
+                        ]),
+
+                        const SizedBox(height: 16),
+
+                        // Note
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.blue.shade50,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Text(
+                            "Note:\nYou may increase till 2650 quantity of boxes.",
+                            style: TextStyle(fontWeight: FontWeight.w500),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Partitions
+                        const Text("Partitions", style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 12),
+
+                        _buildTwoColumnSection([
+                          ["SIZE", "423X15"],
+                          ["OD", "25x35x33"],
+                          ["CUTS", "D - 2, L - 5"],
+                          ["TYPE", "Vertical"],
+                          ["PLY", "3 Ply"],
+                          ["WEIGHT", "50"],
+                        ]),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -190,4 +216,218 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       ),
     );
   }
+
+  Future<void> _shareProgramCard() async {
+    setState(() => _hideButtons = true);
+    await Future.delayed(const Duration(milliseconds: 100)); // Wait for UI to update
+
+    try {
+      RenderRepaintBoundary boundary =
+          _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/program_card.png';
+      final file = File(filePath);
+      await file.writeAsBytes(pngBytes);
+
+      await Share.shareXFiles([XFile(filePath)], text: 'Program details');
+    } catch (e) {
+      debugPrint("Error sharing program: $e");
+    }
+
+    setState(() => _hideButtons = false);
+  }
+}
+
+Future<void> _showAddProgramDialog(BuildContext context) async {
+  final TextEditingController quantityController = TextEditingController();
+  final TextEditingController notesController = TextEditingController();
+
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text("Add Program"),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              DropdownButtonFormField<String>(
+                decoration: const InputDecoration(labelText: "Product Name"),
+                items: ["Product 1", "Product 2", "Product 3"]
+                    .map((product) => DropdownMenuItem(value: product, child: Text(product)))
+                    .toList(),
+                onChanged: (value) {},
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: quantityController,
+                decoration: const InputDecoration(labelText: "Program Quantity"),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                readOnly: true,
+                decoration: const InputDecoration(
+                  labelText: "Program Date",
+                  suffixIcon: Icon(Icons.calendar_today),
+                ),
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: DateTime.now(),
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  );
+                  if (picked != null) {}
+                },
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: "Program Notes",
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Close"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A68F2),
+              foregroundColor: Colors.white,
+            ),
+            child: const Text("Save Program"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> _showEditProgramDialog(BuildContext context,
+    {required String productName,
+    required String quantity,
+    required DateTime programDate,
+    required String notes}) async {
+  final TextEditingController quantityController = TextEditingController(text: quantity);
+  final TextEditingController notesController = TextEditingController(text: notes);
+  DateTime selectedDate = programDate;
+
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text("Edit Program"),
+        content: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                readOnly: true,
+                decoration: InputDecoration(labelText: "Product Name", hintText: productName),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: quantityController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Program Quantity"),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                readOnly: true,
+                decoration: InputDecoration(
+                  labelText: "Program Date",
+                  hintText:
+                      "${selectedDate.month.toString().padLeft(2, '0')}/${selectedDate.day.toString().padLeft(2, '0')}/${selectedDate.year}",
+                  suffixIcon: const Icon(Icons.calendar_today),
+                ),
+                onTap: () async {
+                  final DateTime? picked = await showDatePicker(
+                    context: context,
+                    initialDate: selectedDate,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime(2100),
+                  );
+                  if (picked != null) {
+                    selectedDate = picked;
+                  }
+                },
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: notesController,
+                maxLines: 3,
+                decoration: const InputDecoration(
+                  labelText: "Program Notes",
+                  alignLabelWithHint: true,
+                ),
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Close"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF4A68F2),
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("Save Changes"),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> _showDeleteConfirmationDialog(BuildContext context, VoidCallback onDelete) async {
+  await showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        title: const Text("Delete Program"),
+        content: const Text("Are you sure you want to delete this program?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
+            ),
+            onPressed: () {
+              Navigator.of(context).pop();
+              onDelete();
+            },
+            child: const Text("Delete"),
+          ),
+        ],
+      );
+    },
+  );
 }

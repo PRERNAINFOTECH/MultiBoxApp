@@ -70,6 +70,7 @@ class _ProductionsScreenState extends State<ProductionsArchiveScreen> {
 
                       // Production Quantity Card
                       Card(
+                        color: Colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         child: Padding(
@@ -94,6 +95,7 @@ class _ProductionsScreenState extends State<ProductionsArchiveScreen> {
 
                       // Reels Used Card
                       Card(
+                        color: Colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                         child: Padding(
