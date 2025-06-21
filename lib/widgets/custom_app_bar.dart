@@ -1,5 +1,14 @@
 // app_bar_menu.dart
 import 'package:flutter/material.dart';
+import '../screens/company_buyers/company_profile.dart';
+import '../screens/company_buyers/buyers_list.dart';
+import '../screens/plan_support/plans_and_pricing.dart';
+import '../screens/plan_support/contact_support.dart';
+import '../screens/information/about_us.dart';
+import '../screens/information/privacy_policy.dart';
+import '../screens/information/terms_and_conditions.dart';
+import '../screens/information/refund_policy.dart';
+import '../screens/information/faqs.dart';
 
 class AppBarMenu extends StatelessWidget {
   const AppBarMenu({super.key});
@@ -7,23 +16,58 @@ class AppBarMenu extends StatelessWidget {
   void handleMenuClick(BuildContext context, String value) {
     switch (value) {
       case 'company_profile':
-        // Navigator.pushNamed(context, '/companyProfile');
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CompanyProfile()),
+        );
         break;
       case 'buyers_list':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const BuyersListScreen()),
+        );
         break;
       case 'pricing':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PlansPricingScreen()),
+        );
         break;
       case 'support':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ContactSupportScreen()),
+        );
         break;
       case 'about':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AboutUsScreen()),
+        );
         break;
       case 'privacy':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+        );
         break;
       case 'terms':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const TermsConditionsScreen()),
+        );
         break;
       case 'refund':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RefundPolicyScreen()),
+        );
         break;
       case 'faq':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FAQsScreen()),
+        );
         break;
       case 'logout':
         break;
