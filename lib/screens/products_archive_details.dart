@@ -50,10 +50,13 @@ class _ProductsDetailScreenState extends State<ProductsArchiveDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       OutlinedButton(
-                        onPressed: () {},
+                        onPressed: () {
+                          _showRestoreConfirmationDialog();
+                        },
                         style: OutlinedButton.styleFrom(
                           shape: const CircleBorder(),
                           padding: const EdgeInsets.all(12),
+                          side: const BorderSide(color: Colors.green),
                         ),
                         child: const Icon(Icons.restore_from_trash, color: Colors.green),
                       ),
@@ -81,6 +84,32 @@ class _ProductsDetailScreenState extends State<ProductsArchiveDetailScreen> {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Future<void> _showRestoreConfirmationDialog() async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Restore Product"),
+        content: const Text("Are you sure you want to restore this product?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              // Your actual restore logic here
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text("Product restored")),
+              );
+            },
+            child: const Text("Restore", style: TextStyle(color: Colors.green)),
+          ),
+        ],
       ),
     );
   }

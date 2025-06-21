@@ -20,6 +20,214 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
     super.dispose();
   }
 
+  Future<void> _showPartitionDialog({Map<String, String>? initialData}) async {
+    final TextEditingController sizeController =
+        TextEditingController(text: initialData?["size"] ?? "");
+    final TextEditingController odController =
+        TextEditingController(text: initialData?["od"] ?? "");
+    final TextEditingController deckleController =
+        TextEditingController(text: initialData?["deckle"] ?? "");
+    final TextEditingController lengthController =
+        TextEditingController(text: initialData?["length"] ?? "");
+    final TextEditingController typeController =
+        TextEditingController(text: initialData?["type"] ?? "Vertical");
+    final TextEditingController plyController =
+        TextEditingController(text: initialData?["ply"] ?? "3 Ply");
+    final TextEditingController weightController =
+        TextEditingController(text: initialData?["weight"] ?? "");
+    final TextEditingController gsmController =
+        TextEditingController(text: initialData?["gsm"] ?? "");
+    final TextEditingController bfController =
+        TextEditingController(text: initialData?["bf"] ?? "");
+
+    await showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 600),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text("Partition Details",
+                          style:
+                              TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      CloseButton(),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  _buildDialogField("Partition Size", sizeController),
+                  _buildDialogField("Partition OD", odController),
+                  _buildDialogField("Deckle Cut", deckleController),
+                  _buildDialogField("Length Cut", lengthController),
+                  _buildDialogField("Partition Type", typeController),
+                  _buildDialogField("Ply Number", plyController),
+                  _buildDialogField("Partition Weight", weightController),
+                  _buildDialogField("Ply GSM", gsmController),
+                  _buildDialogField("Ply BF", bfController),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
+                    children: [
+                      ElevatedButton(
+                        style:
+                            ElevatedButton.styleFrom(
+                              backgroundColor: Colors.grey,
+                              foregroundColor: Colors.white,
+                            ),
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Close"),
+                      ),
+                      const SizedBox(width: 10),
+                      ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF4A68F2),
+                            foregroundColor: Colors.white,
+                          ),
+                        onPressed: () {
+                          // Save partition logic
+                          Navigator.pop(context);
+                        },
+                        child: const Text("Save"),
+                      ),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Future<void> _showEditProductDialog({Map<String, String>? initialData}) async {
+    final nameController = TextEditingController(text: initialData?['name'] ?? widget.productName);
+    final codeController = TextEditingController(text: initialData?['code'] ?? "BH-507");
+    final materialCodeController = TextEditingController(text: initialData?['material'] ?? "MC001");
+    final sizeController = TextEditingController(text: initialData?['size'] ?? "445x280x295");
+    final idController = TextEditingController(text: initialData?['id'] ?? "ID");
+    final odController = TextEditingController(text: initialData?['od'] ?? "448x283x301");
+    final colorController = TextEditingController(text: initialData?['color'] ?? "Dark Green");
+    final weightController = TextEditingController(text: initialData?['weight'] ?? "439gm");
+    final plyController = TextEditingController(text: initialData?['ply'] ?? "3");
+    final csController = TextEditingController(text: initialData?['cs'] ?? "130");
+    final gsmController = TextEditingController(text: initialData?['gsm'] ?? "140");
+    final bfController = TextEditingController(text: initialData?['bf'] ?? "18");
+
+    await showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 600),
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text("Edit Product", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                    CloseButton(),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                _buildDialogField("Product Name", nameController),
+                _buildDialogField("Box Number", codeController),
+                _buildDialogField("Material Code", materialCodeController),
+                _buildDialogField("Size", sizeController),
+                _buildDialogField("ID", idController),
+                _buildDialogField("OD", odController),
+                _buildDialogField("Color", colorController),
+                _buildDialogField("Weight", weightController),
+                _buildDialogField("Ply", plyController),
+                _buildDialogField("CS", csController),
+                _buildDialogField("GSM", gsmController),
+                _buildDialogField("BF", bfController),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.grey,
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("Close"),
+                    ),
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A68F2),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () {
+                        // Save logic here
+                        Navigator.pop(context);
+                      },
+                      child: const Text("Save"),
+                    ),
+                  ],
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _showDeleteConfirmationDialog(String itemType, VoidCallback onConfirm) async {
+    return showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text("Delete $itemType"),
+        content: Text("Are you sure you want to delete this $itemType?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+          TextButton(onPressed: () {
+            Navigator.pop(context);
+            onConfirm();
+          }, child: const Text("Delete", style: TextStyle(color: Colors.red)))
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDialogField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: TextField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: const OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _coloredCircleButton(IconData icon, Color color, VoidCallback onPressed) {
+    return OutlinedButton(
+      onPressed: onPressed,
+      style: OutlinedButton.styleFrom(
+        shape: const CircleBorder(),
+        side: BorderSide(color: color),
+        padding: const EdgeInsets.all(12),
+      ),
+      child: Icon(icon, color: color),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +245,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
                 headerRight: "Code - BH-507",
                 children: [
                   _buildTwoColumnRow("MATERIAL CODE", "SIZE", isHeader: true),
-                  _buildTwoColumnRow("ID", "OD", isHeader: false),
+                  _buildTwoColumnRow("ID", "OD"),
                   _buildTwoColumnRow("445x280x295", "448x283x301"),
                   _buildTwoColumnRow("COLOR", "WEIGHT", isHeader: true),
                   _buildTwoColumnRow("Dark Green", "439gm"),
@@ -49,30 +257,28 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(12),
-                        ),
-                        child: const Icon(Icons.add_box, color: Colors.green),
-                      ),
-                      OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(12),
-                        ),
-                        child: const Icon(Icons.edit, color: Colors.blue),
-                      ),
-                      OutlinedButton(
-                        onPressed: () {},
-                        style: OutlinedButton.styleFrom(
-                          shape: const CircleBorder(),
-                          padding: const EdgeInsets.all(12),
-                        ),
-                        child: const Icon(Icons.delete, color: Colors.red),
-                      ),
+                      _coloredCircleButton(Icons.add_box, Colors.green, () => _showPartitionDialog()),
+                      _coloredCircleButton(Icons.edit, Colors.blue, () {
+                        _showEditProductDialog(initialData: {
+                          "name": widget.productName,
+                          "code": "BH-507",
+                          "material": "MC001",
+                          "size": "445x280x295",
+                          "id": "ID",
+                          "od": "448x283x301",
+                          "color": "Dark Green",
+                          "weight": "439gm",
+                          "ply": "3",
+                          "cs": "130",
+                          "gsm": "140",
+                          "bf": "18",
+                        });
+                      }),
+                      _coloredCircleButton(Icons.delete, Colors.red, () {
+                        _showDeleteConfirmationDialog("product", () {
+                          // handle delete
+                        });
+                      }),
                     ],
                   )
                 ],
@@ -84,22 +290,24 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
                 headerLeft: "Partition - vertical",
                 headerRightWidget: Row(
                   children: [
-                    OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(10),
-                      ),
-                      child: const Icon(Icons.delete, color: Colors.red),
-                    ),
-                    OutlinedButton(
-                      onPressed: () {},
-                      style: OutlinedButton.styleFrom(
-                        shape: const CircleBorder(),
-                        padding: const EdgeInsets.all(10),
-                      ),
-                      child: const Icon(Icons.edit, color: Colors.blue),
-                    ),
+                    _coloredCircleButton(Icons.delete, Colors.red, () {
+                      _showDeleteConfirmationDialog("partition", () {
+                        // delete partition logic
+                      });
+                    }),
+                    _coloredCircleButton(Icons.edit, Colors.blue, () {
+                      _showPartitionDialog(initialData: {
+                        "size": "47x32.5 /12",
+                        "od": "275x298",
+                        "deckle": "4",
+                        "length": "3",
+                        "type": "Vertical",
+                        "ply": "3 Ply",
+                        "weight": "40",
+                        "gsm": "140",
+                        "bf": "18",
+                      });
+                    }),
                   ],
                 ),
                 children: [
