@@ -11,7 +11,7 @@ import '../screens/information/faqs.dart';
 import '../screens/authentication/login.dart';
 import '../screens/authentication/signup.dart';
 import '../screens/authentication/logout.dart';
-import '../screens/authentication/verification_email_sent.dart';
+import '../screens/authentication/verify_email_otp_screen.dart';
 import '../screens/authentication/forgot_password.dart';
 import '../screens/authentication/set_password.dart';
 
@@ -59,7 +59,7 @@ class AppBarMenu extends StatelessWidget {
         Navigator.push(context, MaterialPageRoute(builder: (context) => const LogoutScreen()));
         break;
       case 'verify_email':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const VerificationEmailSentScreen()));
+        Navigator.push(context, MaterialPageRoute(builder: (context) => const VerifyEmailOtpScreen()));
         break;
       case 'forgot_password':
         Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()));

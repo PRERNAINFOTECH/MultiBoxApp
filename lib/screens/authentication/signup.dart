@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import '../../widgets/side_drawer.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../authentication/verify_email_otp_screen.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../config.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -38,16 +42,63 @@ class _SignupScreenState extends State<SignupScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Make your API call to /accounts/signup/ here
-      // Example body: { username: name, email: email, password1: password, password2: confirmPassword }
+      final response = await http.post(
+        Uri.parse("$baseUrl/_allauth/app/v1/auth/signup"),
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: json.encode({
+          "username": name,
+          "email": email,
+          "password": password,
+        }),
+      );
 
-      // Simulate success
-      _showMessage("Signup successful! Please check your email to verify.");
-      Navigator.pushReplacementNamed(context, "/verify-email-sent");
+      final data = json.decode(response.body);
+
+      // ✅ Check if verify_email is pending in 401 response
+      final isVerificationPending = response.statusCode == 401 &&
+          data is Map &&
+          data['data'] != null &&
+          data['data']['flows'] is List &&
+          (data['data']['flows'] as List).any((flow) =>
+              flow['id'] == 'verify_email' && flow['is_pending'] == true);
+
+      if (response.statusCode == 200 ||
+          response.statusCode == 201 ||
+          isVerificationPending) {
+        if (!mounted) return;
+
+        _showMessage("Signup successful! Please check your email to verify.");
+        final sessionToken = data['meta']?['session_token'];
+        // ✅ Navigate to OTP screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => VerifyEmailOtpScreen(email: email, sessionToken: sessionToken,),
+          ),
+        );
+      } else {
+        if (!mounted) return;
+
+        // ✅ Show error from API
+        if (data is Map && data.isNotEmpty) {
+          final firstValue = data.values.first;
+          if (firstValue is List) {
+            _showMessage(firstValue.first.toString());
+          } else if (firstValue is Map && firstValue.containsKey('detail')) {
+            _showMessage(firstValue['detail'].toString());
+          } else {
+            _showMessage(firstValue.toString());
+          }
+        } else {
+          _showMessage("Signup failed. Please try again.");
+        }
+      }
     } catch (e) {
-      _showMessage("Signup failed. Please try again.");
+      if (mounted) _showMessage("Error occurred: $e");
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
