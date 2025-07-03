@@ -1,3 +1,4 @@
+// Updated signup.dart to store pending email + session token
 import 'package:flutter/material.dart';
 import '../../widgets/side_drawer.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
@@ -6,6 +7,8 @@ import '../authentication/verify_email_otp_screen.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import '../../config.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import '../authentication/login.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -44,9 +47,7 @@ class _SignupScreenState extends State<SignupScreen> {
     try {
       final response = await http.post(
         Uri.parse("$baseUrl/_allauth/app/v1/auth/signup"),
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: {"Content-Type": "application/json"},
         body: json.encode({
           "username": name,
           "email": email,
@@ -56,47 +57,31 @@ class _SignupScreenState extends State<SignupScreen> {
 
       final data = json.decode(response.body);
 
-      // ✅ Check if verify_email is pending in 401 response
-      final isVerificationPending = response.statusCode == 401 &&
-          data is Map &&
-          data['data'] != null &&
-          data['data']['flows'] is List &&
-          (data['data']['flows'] as List).any((flow) =>
-              flow['id'] == 'verify_email' && flow['is_pending'] == true);
+      final isVerifyEmailPending = response.statusCode == 401 &&
+          data['data']?['flows']?.any((flow) => flow['id'] == 'verify_email' && flow['is_pending'] == true) == true;
 
-      if (response.statusCode == 200 ||
-          response.statusCode == 201 ||
-          isVerificationPending) {
+      final sessionToken = data['meta']?['session_token'];
+
+      if ((response.statusCode == 200 || response.statusCode == 201 || isVerifyEmailPending) && sessionToken != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('pending_email', email);
+        await prefs.setString('pending_session_token', sessionToken);
+
         if (!mounted) return;
+        _showMessage("Signup successful! Please verify your email.");
 
-        _showMessage("Signup successful! Please check your email to verify.");
-        final sessionToken = data['meta']?['session_token'];
-        // ✅ Navigate to OTP screen
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => VerifyEmailOtpScreen(email: email, sessionToken: sessionToken,),
+            builder: (context) => VerifyEmailOtpScreen(email: email, sessionToken: sessionToken),
           ),
         );
       } else {
-        if (!mounted) return;
-
-        // ✅ Show error from API
-        if (data is Map && data.isNotEmpty) {
-          final firstValue = data.values.first;
-          if (firstValue is List) {
-            _showMessage(firstValue.first.toString());
-          } else if (firstValue is Map && firstValue.containsKey('detail')) {
-            _showMessage(firstValue['detail'].toString());
-          } else {
-            _showMessage(firstValue.toString());
-          }
-        } else {
-          _showMessage("Signup failed. Please try again.");
-        }
+        final firstValue = data.values.first;
+        _showMessage(firstValue.toString());
       }
     } catch (e) {
-      if (mounted) _showMessage("Error occurred: $e");
+      _showMessage("An error occurred: $e");
     } finally {
       if (mounted) setState(() => isLoading = false);
     }
@@ -141,16 +126,26 @@ class _SignupScreenState extends State<SignupScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: isLoading ? null : _signup,
-                      style: _buttonStyle(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A68F2),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                      ),
                       child: isLoading
                           ? const CircularProgressIndicator()
                           : const Text("Sign Up", style: TextStyle(fontSize: 16)),
                     ),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, "/login"),
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
                     child: const Text("Already have an account? Login"),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -174,12 +169,4 @@ class _SignupScreenState extends State<SignupScreen> {
     );
   }
 
-  ButtonStyle _buttonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF4A68F2),
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-    );
-  }
 }

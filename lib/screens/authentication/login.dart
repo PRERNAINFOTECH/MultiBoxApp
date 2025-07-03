@@ -1,7 +1,16 @@
+// Updated login.dart to handle session storage and pending state cleanup
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+
 import '../../widgets/side_drawer.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../config.dart';
+import '../stocks.dart';
+import '../authentication/forgot_password.dart';
+import '../authentication/signup.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,14 +38,43 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Send POST to /accounts/login/
-      // Expect a token or session response
-      // Handle login success or failure accordingly
-      _showMessage("Login successful!");
+      final response = await http.post(
+        Uri.parse("$baseUrl/_allauth/app/v1/auth/login?client=app"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"email": email, "password": password}),
+      );
+
+      final data = json.decode(response.body);
+
+      if (!mounted) return;
+
+      if (response.statusCode == 200 && data['meta']?['session_token'] != null) {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_token', data['meta']['session_token']);
+        await prefs.remove('pending_email');
+        await prefs.remove('pending_session_token');
+
+        _showMessage("Login successful!");
+        if (!mounted) return;
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const StocksScreen()),
+        );
+      } else {
+        final error = data is Map && data.isNotEmpty
+            ? (data.values.first is List ? data.values.first.first.toString() : data.values.first.toString())
+            : "Login failed. Please try again.";
+
+        _showMessage(error);
+      }
     } catch (e) {
-      _showMessage("Login failed. Please try again.");
+      if (mounted) {
+        _showMessage("Login error: $e");
+      }
     } finally {
-      setState(() => isLoading = false);
+      if (mounted) {
+        setState(() => isLoading = false);
+      }
     }
   }
 
@@ -82,12 +120,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, "/forgot-password"),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()),
+                      );
+                    },
                     child: const Text("Forgot Password?"),
                   ),
                   TextButton(
-                    onPressed: () => Navigator.pushNamed(context, "/signup"),
-                    child: const Text("Don’t have an account? Sign up"),
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SignupScreen()),
+                      );
+                    },
+                    child: const Text("Don't have an account? Sign up"),
                   )
                 ],
               ),

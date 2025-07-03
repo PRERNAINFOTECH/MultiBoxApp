@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 import '../../widgets/side_drawer.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../config.dart';
+import 'login.dart';
+import 'dart:convert';
 
 class LogoutScreen extends StatefulWidget {
   const LogoutScreen({super.key});
@@ -14,27 +19,56 @@ class _LogoutScreenState extends State<LogoutScreen> {
   final ScrollController scrollController = ScrollController();
   bool isLoggingOut = false;
 
-  void _logout() async {
+  Future<void> _logout() async {
     setState(() => isLoggingOut = true);
 
     try {
-      // Example: Call Django AllAuth logout endpoint
-      // await http.post(Uri.parse('https://yourdomain.com/accounts/logout/'));
+      final prefs = await SharedPreferences.getInstance();
+      final sessionToken = prefs.getString('auth_token');
 
-      // Clear tokens/session from storage if any
-      // e.g., SharedPreferences prefs = await SharedPreferences.getInstance();
-      // await prefs.remove('authToken');
+      if (sessionToken == null || sessionToken.isEmpty) {
+        _showMessage("No active session.");
+        _redirectToLogin();
+        return;
+      }
 
-      _showMessage("Logged out successfully");
-      Navigator.pushNamedAndRemoveUntil(context, "/login", (route) => false);
+      final response = await http.delete(
+        Uri.parse("$baseUrl/_allauth/app/v1/auth/session?client=app"),
+        headers: {
+          "X-Session-Token": sessionToken,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204 || response.statusCode == 401) {
+        // Clear local storage regardless of server response
+        await prefs.remove('auth_token');
+        await prefs.remove('pending_email');
+        await prefs.remove('pending_session_token');
+
+        _showMessage("Logged out successfully");
+        _redirectToLogin();
+      } else {
+        final data = json.decode(response.body);
+        final error = data.values.first;
+        _showMessage(error is List ? error.first.toString() : error.toString());
+      }
     } catch (e) {
-      _showMessage("Logout failed");
+      _showMessage("Logout failed: $e");
     } finally {
-      setState(() => isLoggingOut = false);
+      if (mounted) setState(() => isLoggingOut = false);
     }
   }
 
+  void _redirectToLogin() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+      (route) => false,
+    );
+  }
+
   void _showMessage(String msg) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
