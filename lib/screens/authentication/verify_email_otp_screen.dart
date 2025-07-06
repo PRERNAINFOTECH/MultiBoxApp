@@ -61,12 +61,14 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/_allauth/app/v1/auth/email/verify?client=app"),
+        Uri.parse("$baseUrl/m-auth/verify-email/"),
         headers: {
           "Content-Type": "application/json",
-          "X-Session-Token": sessionToken ?? "",
         },
-        body: json.encode({"key": otp}),
+        body: json.encode({
+          "email": email,
+          "code": otp,
+        }),
       );
 
       final data = json.decode(response.body);

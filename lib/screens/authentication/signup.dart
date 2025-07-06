@@ -1,14 +1,14 @@
-// Updated signup.dart to store pending email + session token
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../widgets/side_drawer.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/custom_app_bar.dart';
-import '../authentication/verify_email_otp_screen.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 import '../../config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import '../authentication/login.dart';
+import '../authentication/verify_email_otp_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   const SignupScreen({super.key});
@@ -46,7 +46,7 @@ class _SignupScreenState extends State<SignupScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/_allauth/app/v1/auth/signup"),
+        Uri.parse("$baseUrl/m-auth/signup/"),
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "username": name,
@@ -57,28 +57,24 @@ class _SignupScreenState extends State<SignupScreen> {
 
       final data = json.decode(response.body);
 
-      final isVerifyEmailPending = response.statusCode == 401 &&
-          data['data']?['flows']?.any((flow) => flow['id'] == 'verify_email' && flow['is_pending'] == true) == true;
+      if (!mounted) return;
 
-      final sessionToken = data['meta']?['session_token'];
-
-      if ((response.statusCode == 200 || response.statusCode == 201 || isVerifyEmailPending) && sessionToken != null) {
+      if (response.statusCode == 201) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('pending_email', email);
-        await prefs.setString('pending_session_token', sessionToken);
 
         if (!mounted) return;
-        _showMessage("Signup successful! Please verify your email.");
 
+        _showMessage("Signup successful! Please verify your email.");
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => VerifyEmailOtpScreen(email: email, sessionToken: sessionToken),
+            builder: (context) => VerifyEmailOtpScreen(email: email),
           ),
         );
       } else {
-        final firstValue = data.values.first;
-        _showMessage(firstValue.toString());
+        final error = data['error'] ?? data.values.first;
+        _showMessage(error.toString());
       }
     } catch (e) {
       _showMessage("An error occurred: $e");
@@ -114,7 +110,7 @@ class _SignupScreenState extends State<SignupScreen> {
                   const SizedBox(height: 60),
                   const Text("Create Account", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 30),
-                  _buildInput("Name", nameController),
+                  _buildInput("Username", nameController),
                   const SizedBox(height: 12),
                   _buildInput("Email", emailController),
                   const SizedBox(height: 12),
@@ -133,7 +129,7 @@ class _SignupScreenState extends State<SignupScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                       ),
                       child: isLoading
-                          ? const CircularProgressIndicator()
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Text("Sign Up", style: TextStyle(fontSize: 16)),
                     ),
                   ),
@@ -168,5 +164,4 @@ class _SignupScreenState extends State<SignupScreen> {
       ),
     );
   }
-
 }

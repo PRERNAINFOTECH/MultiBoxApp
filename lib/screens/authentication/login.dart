@@ -1,4 +1,3 @@
-// Updated login.dart to handle session storage and pending state cleanup
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -27,10 +26,10 @@ class _LoginScreenState extends State<LoginScreen> {
   bool isLoading = false;
 
   void _login() async {
-    final email = emailController.text.trim();
+    final username = emailController.text.trim();
     final password = passwordController.text;
 
-    if (email.isEmpty || password.isEmpty) {
+    if (username.isEmpty || password.isEmpty) {
       _showMessage("Please fill in all fields");
       return;
     }
@@ -39,32 +38,36 @@ class _LoginScreenState extends State<LoginScreen> {
 
     try {
       final response = await http.post(
-        Uri.parse("$baseUrl/_allauth/app/v1/auth/login?client=app"),
+        Uri.parse("$baseUrl/m-auth/login/"),
         headers: {"Content-Type": "application/json"},
-        body: json.encode({"email": email, "password": password}),
+        body: json.encode({
+          "username": username,
+          "password": password,
+        }),
       );
 
       final data = json.decode(response.body);
 
       if (!mounted) return;
 
-      if (response.statusCode == 200 && data['meta']?['session_token'] != null) {
+      if (response.statusCode == 201 && data['token'] != null) {
         final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', data['meta']['session_token']);
+        await prefs.setString('auth_token', data['token']);
         await prefs.remove('pending_email');
         await prefs.remove('pending_session_token');
 
         _showMessage("Login successful!");
         if (!mounted) return;
-        Navigator.push(
+
+        Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => const StocksScreen()),
         );
       } else {
-        final error = data is Map && data.isNotEmpty
-            ? (data.values.first is List ? data.values.first.first.toString() : data.values.first.toString())
-            : "Login failed. Please try again.";
-
+        String error = "Login failed. Please try again.";
+        if (data is Map && data.containsKey('error')) {
+          error = data['error'].toString();
+        }
         _showMessage(error);
       }
     } catch (e) {
@@ -105,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 60),
                   const Text("Welcome Back", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 30),
-                  _buildInput("Email", emailController),
+                  _buildInput("Username", emailController),
                   const SizedBox(height: 12),
                   _buildInput("Password", passwordController, obscureText: true),
                   const SizedBox(height: 20),
@@ -115,7 +118,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: isLoading ? null : _login,
                       style: _buttonStyle(),
                       child: isLoading
-                          ? const CircularProgressIndicator()
+                          ? const SizedBox(height: 18, width: 18, child: CircularProgressIndicator(strokeWidth: 2))
                           : const Text("Login", style: TextStyle(fontSize: 16)),
                     ),
                   ),
