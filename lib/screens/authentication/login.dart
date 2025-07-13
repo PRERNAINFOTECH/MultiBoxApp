@@ -59,7 +59,7 @@ class _LoginScreenState extends State<LoginScreen> {
         _showMessage("Login successful!");
         if (!mounted) return;
 
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(builder: (context) => const StocksScreen()),
         );

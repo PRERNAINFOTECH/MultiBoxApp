@@ -24,27 +24,27 @@ class _LogoutScreenState extends State<LogoutScreen> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      final sessionToken = prefs.getString('auth_token');
+      final authToken = prefs.getString('auth_token');
 
-      if (sessionToken == null || sessionToken.isEmpty) {
+      if (authToken == null || authToken.isEmpty) {
         _showMessage("No active session.");
         _redirectToLogin();
         return;
       }
 
-      final response = await http.delete(
-        Uri.parse("$baseUrl/_allauth/app/v1/auth/session?client=app"),
+      final response = await http.post(
+        Uri.parse("$baseUrl/m-auth/logout/"),
         headers: {
-          "X-Session-Token": sessionToken,
+          'Authorization': 'Token $authToken',
         },
       );
 
-      if (response.statusCode == 200 || response.statusCode == 204 || response.statusCode == 401) {
-        // Clear local storage regardless of server response
-        await prefs.remove('auth_token');
-        await prefs.remove('pending_email');
-        await prefs.remove('pending_session_token');
+      // Clear token from local storage regardless of server response
+      await prefs.remove('auth_token');
+      await prefs.remove('pending_email');
+      await prefs.remove('pending_session_token');
 
+      if (response.statusCode == 200 || response.statusCode == 401) {
         _showMessage("Logged out successfully");
         _redirectToLogin();
       } else {
