@@ -1,7 +1,12 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/side_drawer.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../config.dart'; // baseUrl should be defined here
 
 class BuyersListScreen extends StatefulWidget {
   const BuyersListScreen({super.key});
@@ -12,7 +17,103 @@ class BuyersListScreen extends StatefulWidget {
 
 class _BuyersListScreenState extends State<BuyersListScreen> {
   final ScrollController _scrollController = ScrollController();
-  final List<String> buyers = ['Wallmart', 'Costco', 'Hersheys'];
+  List<Map<String, dynamic>> _buyers = [];
+  bool _isLoading = true;
+  String? _authToken;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadTokenAndFetchBuyers();
+  }
+
+  Future<void> _loadTokenAndFetchBuyers() async {
+    final prefs = await SharedPreferences.getInstance();
+    _authToken = prefs.getString('auth_token');
+
+    if (_authToken != null) {
+      await _fetchBuyers();
+    } else {
+      setState(() => _isLoading = false);
+      _showError("User not authenticated.");
+    }
+  }
+
+  Future<void> _fetchBuyers() async {
+    setState(() => _isLoading = true);
+
+    final response = await http.get(
+      Uri.parse('$baseUrl/tenant/buyers/'),
+      headers: {'Authorization': 'Token $_authToken'},
+    );
+
+    if (response.statusCode == 200) {
+      final List<dynamic> data = json.decode(response.body);
+      setState(() {
+        _buyers = data.map((item) => {
+              'id': item['id'],
+              'name': item['buyer_name'],
+            }).toList();
+        _isLoading = false;
+      });
+    } else {
+      _showError("Failed to load buyers.");
+      setState(() => _isLoading = false);
+    }
+  }
+
+  Future<void> _addBuyer(String name) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/tenant/buyers/'),
+      headers: {
+        'Authorization': 'Token $_authToken',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({'buyer_name': name}),
+    );
+
+    if (response.statusCode == 201) {
+      _fetchBuyers();
+    } else {
+      _showError(json.decode(response.body)['detail'] ?? 'Add failed');
+    }
+  }
+
+  Future<void> _editBuyer(int id, String name) async {
+    final response = await http.put(
+      Uri.parse('$baseUrl/tenant/buyers/$id/'),
+      headers: {
+        'Authorization': 'Token $_authToken',
+        'Content-Type': 'application/json',
+      },
+      body: json.encode({'buyer_name': name}),
+    );
+
+    if (response.statusCode == 200) {
+      _fetchBuyers();
+    } else {
+      _showError(json.decode(response.body)['detail'] ?? 'Update failed');
+    }
+  }
+
+  Future<void> _deleteBuyer(int id) async {
+    final response = await http.delete(
+      Uri.parse('$baseUrl/tenant/buyers/$id/'),
+      headers: {'Authorization': 'Token $_authToken'},
+    );
+
+    if (response.statusCode == 200) {
+      _fetchBuyers();
+    } else {
+      _showError(json.decode(response.body)['detail'] ?? 'Delete failed');
+    }
+  }
+
+  void _showError(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -34,13 +135,7 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
             decoration: BoxDecoration(
               color: Colors.white,
               borderRadius: BorderRadius.circular(12),
-              boxShadow: const [
-                BoxShadow(
-                  color: Colors.black12,
-                  blurRadius: 4,
-                  offset: Offset(0, 2),
-                ),
-              ],
+              boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4)],
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,18 +149,21 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
                       ),
                     ),
                     ElevatedButton(
-                      onPressed: _addBuyer,
+                      onPressed: _showAddBuyerDialog,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF4A68F2),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                       ),
                       child: const Text("Add Buyer"),
                     ),
                   ],
                 ),
                 const SizedBox(height: 20),
-                _buildTable(),
+                _isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _buyers.isEmpty
+                        ? const Text("No buyers found.")
+                        : _buildTable(),
               ],
             ),
           ),
@@ -85,7 +183,7 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
       defaultVerticalAlignment: TableCellVerticalAlignment.middle,
       children: [
         _buildHeaderRow(),
-        ...buyers.asMap().entries.map(
+        ..._buyers.asMap().entries.map(
           (entry) => _buildBuyerRow(entry.key + 1, entry.value),
         ),
       ],
@@ -96,33 +194,18 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
     return const TableRow(
       decoration: BoxDecoration(color: Color(0xFFF1F3F5)),
       children: [
-        Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text('#', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text('Buyer name', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
-        Padding(
-          padding: EdgeInsets.all(8.0),
-          child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold)),
-        ),
+        Padding(padding: EdgeInsets.all(8.0), child: Text('#', style: TextStyle(fontWeight: FontWeight.bold))),
+        Padding(padding: EdgeInsets.all(8.0), child: Text('Buyer name', style: TextStyle(fontWeight: FontWeight.bold))),
+        Padding(padding: EdgeInsets.all(8.0), child: Text('Actions', style: TextStyle(fontWeight: FontWeight.bold))),
       ],
     );
   }
 
-  TableRow _buildBuyerRow(int index, String buyer) {
+  TableRow _buildBuyerRow(int index, Map<String, dynamic> buyer) {
     return TableRow(
       children: [
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(index.toString()),
-        ),
-        Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Text(buyer),
-        ),
+        Padding(padding: const EdgeInsets.all(8.0), child: Text(index.toString())),
+        Padding(padding: const EdgeInsets.all(8.0), child: Text(buyer['name'])),
         Padding(
           padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
           child: Row(
@@ -130,15 +213,11 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
             children: [
               IconButton(
                 icon: const Icon(Icons.edit, color: Color(0xFF4A68F2)),
-                onPressed: () {
-                  _editBuyer(index - 1, buyer);
-                },
+                onPressed: () => _showEditBuyerDialog(buyer['id'], buyer['name']),
               ),
               IconButton(
                 icon: const Icon(Icons.delete, color: Colors.red),
-                onPressed: () {
-                  _showDeleteDialog(buyer);
-                },
+                onPressed: () => _showDeleteBuyerDialog(buyer['id'], buyer['name']),
               ),
             ],
           ),
@@ -147,9 +226,8 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
     );
   }
 
-  void _addBuyer() {
-    final TextEditingController controller = TextEditingController();
-
+  void _showAddBuyerDialog() {
+    final controller = TextEditingController();
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -167,7 +245,7 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
             onPressed: () {
               final name = controller.text.trim();
               if (name.isNotEmpty) {
-                setState(() => buyers.add(name));
+                _addBuyer(name);
                 Navigator.pop(context);
               }
             },
@@ -178,9 +256,8 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
     );
   }
 
-  void _editBuyer(int index, String oldName) {
-    final TextEditingController controller = TextEditingController(text: oldName);
-
+  void _showEditBuyerDialog(int id, String currentName) {
+    final controller = TextEditingController(text: currentName);
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
@@ -198,7 +275,7 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
             onPressed: () {
               final newName = controller.text.trim();
               if (newName.isNotEmpty) {
-                setState(() => buyers[index] = newName);
+                _editBuyer(id, newName);
                 Navigator.pop(context);
               }
             },
@@ -209,20 +286,20 @@ class _BuyersListScreenState extends State<BuyersListScreen> {
     );
   }
 
-  void _showDeleteDialog(String buyer) {
+  void _showDeleteBuyerDialog(int id, String name) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (_) => AlertDialog(
         title: const Text('Delete Buyer'),
-        content: Text('Are you sure you want to delete $buyer?'),
+        content: Text('Are you sure you want to delete "$name"?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
           ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             onPressed: () {
-              setState(() => buyers.remove(buyer));
+              _deleteBuyer(id);
               Navigator.pop(context);
             },
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white),
             child: const Text('Delete'),
           ),
         ],
