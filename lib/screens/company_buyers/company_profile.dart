@@ -87,10 +87,10 @@ class _CompanyProfileState extends State<CompanyProfile> {
     final response = await http.get(url, headers: {
       'Authorization': 'Token $authToken',
     });
+    final data = jsonDecode(response.body);
 
     if (response.statusCode == 200) {
       tenantExists = true;
-      final data = jsonDecode(response.body);
 
       _tenantNameController.text = data['tenant_info']['name'] ?? '';
       _tenantGSTController.text = data['tenant_info']['tenant_gst_number'] ?? '';
@@ -125,6 +125,8 @@ class _CompanyProfileState extends State<CompanyProfile> {
         data['tenant_partners'].map((p) => "${p['first_name']} ${p['last_name']}") ?? [],
       );
     } else {
+      _usernameController.text = data['user_info']['username'] ?? '';
+      _ownerEmailController.text = data['user_info']['email'] ?? '';
       tenantExists = false;
     }
 
