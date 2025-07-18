@@ -171,7 +171,7 @@ class _CompanyProfileState extends State<CompanyProfile> {
 
     if (response.statusCode == 200) {
       setState(() => invitedPartners.add(email));
-      Fluttertoast.showToast(msg: "Invitation sent to \$email");
+      Fluttertoast.showToast(msg: "Invitation sent to $email");
     } else {
       Fluttertoast.showToast(msg: "Failed to invite partner");
     }
