@@ -73,13 +73,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
   Widget _buildProductCard(BuildContext context, String name) {
     return GestureDetector(
-      onTap: () {
-        Navigator.push(
+      onTap: () async {
+        final result = await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (context) => ProductsDetailScreen(productName: name),
           ),
         );
+        if (result == true) {
+          _fetchProducts(); // refresh after deletion
+        }
       },
       child: Card(
         color: const Color(0xFFFFFFFF),

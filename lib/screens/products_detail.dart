@@ -94,8 +94,6 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
       partitions = (body['partitions'] as List)
           .map<Map<String, dynamic>>((p) => Map<String, dynamic>.from(p))
           .toList();
-      // print partitions;
-      print(partitions);
       setState(() => _loading = false);
     } else {
       setState(() => _loading = false);
@@ -114,7 +112,8 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
     );
     if (!mounted) return;
     if (resp.statusCode == 200) {
-      Navigator.of(context).pop();
+      // Navigate back and trigger refresh
+      Navigator.pop(context, true); // pass a result to trigger refresh
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text("Product archived!"),
