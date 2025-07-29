@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.multi_box"
-    compileSdk = 34
+    compileSdk = 35
     buildToolsVersion = "34.0.0"
     ndkVersion = "27.0.12077973"
 
