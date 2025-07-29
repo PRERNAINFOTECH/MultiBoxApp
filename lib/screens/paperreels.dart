@@ -130,38 +130,6 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
     }
   }
 
-  Future<void> _bulkUploadExcel() async {
-    final result = await FilePicker.platform.pickFiles(
-      type: FileType.custom,
-      allowedExtensions: ['xlsx', 'xls'],
-    );
-    if (result == null || result.files.isEmpty) return;
-    final file = result.files.single;
-    final authToken = await _getToken();
-    final request = http.MultipartRequest(
-      'POST',
-      Uri.parse('$baseUrl/corrugation/paper-reels/bulk-upload/'),
-    );
-    request.headers['Authorization'] = 'Token $authToken';
-    request.files.add(
-      await http.MultipartFile.fromPath('reel_file', file.path!),
-    );
-
-    final response = await request.send();
-    final respStr = await response.stream.bytesToString();
-    if (!mounted) return;
-    if (response.statusCode == 200) {
-      _fetchPaperReels();
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Bulk upload successful!')));
-    } else {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Bulk upload failed: $respStr')));
-    }
-  }
-
   @override
   void dispose() {
     _debounce?.cancel();
@@ -474,14 +442,7 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
       appBar: AppBar(
         title: const Text("Paper Reels"),
         backgroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.upload_file),
-            tooltip: 'Bulk Upload',
-            onPressed: _bulkUploadExcel,
-          ),
-          const AppBarMenu(),
-        ],
+        actions: [const AppBarMenu()],
       ),
       backgroundColor: const Color(0xFFF8F9FA),
       body: _loading
@@ -499,8 +460,7 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                           child: TextField(
                             controller: _searchController,
                             decoration: InputDecoration(
-                              hintText:
-                                  'Search by Reel No, Size, GSM, BF, Weight',
+                              hintText: 'Search Reels',
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12,
                                 vertical: 10,
@@ -547,6 +507,7 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                           onPressed: _showBulkUploadDialog,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Colors.blue[600],
+                            foregroundColor: Colors.white,
                           ),
                         ),
                       ],
@@ -558,12 +519,12 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                       children: [
                         Chip(
                           label: Text("Used: $usedCount"),
-                          backgroundColor: Colors.grey[300],
+                          backgroundColor: Colors.red[300],
                         ),
                         const SizedBox(width: 8),
                         Chip(
                           label: Text("Unused: $unusedCount"),
-                          backgroundColor: Colors.green[100],
+                          backgroundColor: Colors.green[300],
                         ),
                         const Spacer(),
                         if (totalPages > 1)
@@ -599,56 +560,60 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                     const SizedBox(height: 12),
 
                     // Table header
-                    Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                        vertical: 10,
-                        horizontal: 8,
-                      ),
-                      child: Row(
-                        children: const [
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              "Reel No",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "BF",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "GSM",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "Size",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            child: Text(
-                              "Weight",
-                              style: TextStyle(fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          Expanded(
-                            flex: 2,
-                            child: Center(
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width,
+                      child: Container(
+                        color: Colors.white,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8,
+                          horizontal: 4,
+                        ),
+                        child: Row(
+                          children: const [
+                            Expanded(
                               child: Text(
-                                "Actions",
+                                "Reel",
                                 style: TextStyle(fontWeight: FontWeight.bold),
-                                textAlign: TextAlign.center,
                               ),
                             ),
-                          ),
-                        ],
+                            Expanded(
+                              child: Text(
+                                "BF",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                "GSM",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                "Size",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            Expanded(
+                              child: Text(
+                                "Weight",
+                                style: TextStyle(fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                              ),
+                            ),
+                            Expanded(
+                              flex: 2,
+                              child: Center(
+                                child: Text(
+                                  "Actions",
+                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
 
@@ -675,107 +640,119 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                                       ),
                                     );
                                   },
-                                  child: Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      vertical: 10,
-                                      horizontal: 8,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: reel['used'] == true
-                                          ? Colors.red[100]
-                                          : Colors.white,
-                                      border: const Border(
-                                        bottom: BorderSide(
-                                          color: Color(0xFFF8F9FA),
-                                        ),
+                                  child: SizedBox(
+                                    width: MediaQuery.of(context).size.width,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                        horizontal: 4,
                                       ),
-                                    ),
-                                    child: Row(
-                                      children: [
-                                        Expanded(
-                                          flex: 2,
-                                          child: Text("${reel["reel_number"]}"),
-                                        ),
-                                        Expanded(child: Text("${reel["bf"]}")),
-                                        Expanded(child: Text("${reel["gsm"]}")),
-                                        Expanded(
-                                          child: Text("${reel["size"]}"),
-                                        ),
-                                        Expanded(
-                                          child: Text("${reel["weight"]}"),
-                                        ),
-                                        Expanded(
-                                          flex: 2,
-                                          child: Center(
-                                            child: Wrap(
-                                              spacing: 2, // or 0 for tightest
-                                              children: [
-                                                IconButton(
-                                                  icon: const Icon(
-                                                    Icons.edit,
-                                                    color: Colors.blue,
-                                                  ),
-                                                  tooltip: "Edit",
-                                                  onPressed: () =>
-                                                      _showEditReelDialog(reel),
-                                                  padding: EdgeInsets.zero,
-                                                  constraints: const BoxConstraints(
-                                                    minWidth:
-                                                        32, // minimum clickable area for accessibility
-                                                    minHeight: 32,
-                                                    maxWidth: 36,
-                                                    maxHeight: 36,
-                                                  ),
-                                                  visualDensity:
-                                                      VisualDensity.compact,
-                                                ),
-                                                if (reel['used'] == true)
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.restore,
-                                                      color: Colors.green,
-                                                    ),
-                                                    tooltip: "Restore",
-                                                    onPressed: () =>
-                                                        _restoreReel(
-                                                          reel['id'],
-                                                        ),
-                                                    padding: EdgeInsets.zero,
-                                                    constraints:
-                                                        const BoxConstraints(
-                                                          minWidth: 32,
-                                                          minHeight: 32,
-                                                          maxWidth: 36,
-                                                          maxHeight: 36,
-                                                        ),
-                                                    visualDensity:
-                                                        VisualDensity.compact,
-                                                  )
-                                                else
-                                                  IconButton(
-                                                    icon: const Icon(
-                                                      Icons.delete,
-                                                      color: Colors.red,
-                                                    ),
-                                                    tooltip: "Mark as Used",
-                                                    onPressed: () =>
-                                                        _markAsUsed(reel['id']),
-                                                    padding: EdgeInsets.zero,
-                                                    constraints:
-                                                        const BoxConstraints(
-                                                          minWidth: 32,
-                                                          minHeight: 32,
-                                                          maxWidth: 36,
-                                                          maxHeight: 36,
-                                                        ),
-                                                    visualDensity:
-                                                        VisualDensity.compact,
-                                                  ),
-                                              ],
-                                            ),
+                                      decoration: BoxDecoration(
+                                        color: reel['used'] == true
+                                            ? Colors.red[100]
+                                            : Colors.white,
+                                        border: const Border(
+                                          bottom: BorderSide(
+                                            color: Color(0xFFF8F9FA),
                                           ),
                                         ),
-                                      ],
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: Text(
+                                              "${reel["reel_number"]}",
+                                            ),
+                                          ),
+                                          Expanded(
+                                            child: Text("${reel["bf"]}"),
+                                          ),
+                                          Expanded(
+                                            child: Text("${reel["gsm"]}"),
+                                          ),
+                                          Expanded(
+                                            child: Text("${reel["size"]}"),
+                                          ),
+                                          Expanded(
+                                            child: Text("${reel["weight"]}"),
+                                          ),
+                                          Expanded(
+                                            flex: 2,
+                                            child: Center(
+                                              child: Wrap(
+                                                spacing: 2,
+                                                children: [
+                                                  IconButton(
+                                                    icon: const Icon(
+                                                      Icons.edit,
+                                                      color: Colors.blue,
+                                                    ),
+                                                    tooltip: "Edit",
+                                                    onPressed: () =>
+                                                        _showEditReelDialog(
+                                                          reel,
+                                                        ),
+                                                    padding: EdgeInsets.zero,
+                                                    constraints:
+                                                        const BoxConstraints(
+                                                          minWidth: 32,
+                                                          minHeight: 32,
+                                                          maxWidth: 36,
+                                                          maxHeight: 36,
+                                                        ),
+                                                    visualDensity:
+                                                        VisualDensity.compact,
+                                                  ),
+                                                  if (reel['used'] == true)
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                        Icons.restore,
+                                                        color: Colors.green,
+                                                      ),
+                                                      tooltip: "Restore",
+                                                      onPressed: () =>
+                                                          _restoreReel(
+                                                            reel['id'],
+                                                          ),
+                                                      padding: EdgeInsets.zero,
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                            minWidth: 32,
+                                                            minHeight: 32,
+                                                            maxWidth: 36,
+                                                            maxHeight: 36,
+                                                          ),
+                                                      visualDensity:
+                                                          VisualDensity.compact,
+                                                    )
+                                                  else
+                                                    IconButton(
+                                                      icon: const Icon(
+                                                        Icons.delete,
+                                                        color: Colors.red,
+                                                      ),
+                                                      tooltip: "Mark as Used",
+                                                      onPressed: () =>
+                                                          _markAsUsed(
+                                                            reel['id'],
+                                                          ),
+                                                      padding: EdgeInsets.zero,
+                                                      constraints:
+                                                          const BoxConstraints(
+                                                            minWidth: 32,
+                                                            minHeight: 32,
+                                                            maxWidth: 36,
+                                                            maxHeight: 36,
+                                                          ),
+                                                      visualDensity:
+                                                          VisualDensity.compact,
+                                                    ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 );
