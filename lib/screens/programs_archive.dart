@@ -22,10 +22,11 @@ class ProgramsArchiveScreen extends StatefulWidget {
 
 class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
   final ScrollController _scrollController = ScrollController();
-  bool _hideButtons = false;
 
   List<dynamic> programs = [];
   List<dynamic> filteredPrograms = [];
+  List<GlobalKey> _cardKeys = [];
+  List<bool> _hideButtonsList = [];
   bool _loading = true;
   String? authToken;
   String searchQuery = "";
@@ -52,6 +53,8 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
       setState(() {
         programs = body['programs'] ?? [];
         filteredPrograms = programs;
+        _cardKeys = List.generate(filteredPrograms.length, (_) => GlobalKey());
+        _hideButtonsList = List.generate(filteredPrograms.length, (_) => false);
         _loading = false;
       });
     } else {
@@ -67,6 +70,8 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
             || (prog['box_no']?.toLowerCase() ?? '').contains(query.toLowerCase())
             || (prog['material_code']?.toLowerCase() ?? '').contains(query.toLowerCase());
       }).toList();
+      _cardKeys = List.generate(filteredPrograms.length, (_) => GlobalKey());
+      _hideButtonsList = List.generate(filteredPrograms.length, (_) => false);
     });
   }
 
@@ -95,9 +100,10 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
     }
   }
 
-  Future<void> _shareProgramCard(GlobalKey cardKey) async {
-    setState(() => _hideButtons = true);
-    await Future.delayed(const Duration(milliseconds: 100)); // let UI update
+  // Individual card share logic, _hideButtonsList used per index
+  Future<void> _shareProgramCard(GlobalKey cardKey, int idx) async {
+    setState(() => _hideButtonsList[idx] = true);
+    await Future.delayed(const Duration(milliseconds: 200)); // let UI update
 
     try {
       RenderRepaintBoundary boundary = cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
@@ -106,16 +112,20 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/archive_program.png';
+      final filePath = '${directory.path}/archive_program_${DateTime.now().millisecondsSinceEpoch}.png';
       final file = File(filePath);
       await file.writeAsBytes(pngBytes);
 
       await Share.shareXFiles([XFile(filePath)], text: 'Archived Program Details');
     } catch (e) {
       debugPrint("Error sharing archive program: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to share image."), backgroundColor: Colors.red),
+      );
     }
 
-    setState(() => _hideButtons = false);
+    setState(() => _hideButtonsList[idx] = false);
   }
 
   Widget _buildTwoColumnSection(List<List<String>> items) {
@@ -234,8 +244,10 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
                         )
                       : Column(
                           children: filteredPrograms.asMap().entries.map((entry) {
+                            final idx = entry.key;
                             final prog = entry.value;
-                            final cardKey = GlobalKey();
+                            final cardKey = _cardKeys.length > idx ? _cardKeys[idx] : GlobalKey();
+                            final hideBtns = _hideButtonsList.length > idx ? _hideButtonsList[idx] : false;
 
                             return Column(
                               children: [
@@ -273,7 +285,7 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
                                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                             children: [
                                               Text(prog['program_date'] ?? "", style: const TextStyle(color: Colors.grey)),
-                                              if (!_hideButtons)
+                                              if (!hideBtns)
                                                 Row(
                                                   children: [
                                                     OutlinedButton(
@@ -294,7 +306,7 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
                                                         side: const BorderSide(color: Colors.blueAccent),
                                                       ),
                                                       onPressed: () {
-                                                        _shareProgramCard(cardKey);
+                                                        _shareProgramCard(cardKey, idx);
                                                       },
                                                       child: const Icon(Icons.share, color: Colors.blueAccent, size: 20),
                                                     ),
@@ -338,7 +350,7 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
                                             const SizedBox(height: 12),
                                           if ((prog['partitions'] ?? []).isNotEmpty)
                                             ...((prog['partitions'] as List).asMap().entries.map((entry) {
-                                              final idx = entry.key + 1;
+                                              final pidx = entry.key + 1;
                                               final part = entry.value;
                                               return Column(
                                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -347,7 +359,7 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
                                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                     children: [
                                                       Text(
-                                                        "Partition $idx",
+                                                        "Partition $pidx",
                                                         style: const TextStyle(fontWeight: FontWeight.bold),
                                                       ),
                                                       Text(

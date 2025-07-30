@@ -31,6 +31,9 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
   String? authToken;
   String searchQuery = "";
 
+  // For sharing: One key per card
+  List<GlobalKey> _cardKeys = [];
+
   @override
   void initState() {
     super.initState();
@@ -54,6 +57,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
         programs = body['programs'] ?? [];
         filteredPrograms = programs;
         productNames = body['products'] ?? [];
+        _cardKeys = List.generate(filteredPrograms.length, (_) => GlobalKey());
         _loading = false;
       });
     } else {
@@ -66,9 +70,10 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       searchQuery = query;
       filteredPrograms = programs.where((prog) {
         return (prog['product_name']?.toLowerCase() ?? '').contains(
-              query.toLowerCase(),
-            );
+          query.toLowerCase(),
+        );
       }).toList();
+      _cardKeys = List.generate(filteredPrograms.length, (_) => GlobalKey());
     });
   }
 
@@ -101,15 +106,16 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
     }
   }
 
+  /// ---- SHARING LOGIC ----
   Future<void> _shareProgramCard(GlobalKey cardKey) async {
     setState(() => _hideButtons = true);
     await Future.delayed(
-      const Duration(milliseconds: 100),
-    ); // Wait for UI to update
+      const Duration(milliseconds: 200),
+    ); // Let UI hide the buttons
 
     try {
       RenderRepaintBoundary boundary =
-          cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+          cardKey.currentContext?.findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(
         format: ui.ImageByteFormat.png,
@@ -124,8 +130,14 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       await Share.shareXFiles([XFile(filePath)], text: 'Program details');
     } catch (e) {
       debugPrint("Error sharing program: $e");
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to share image."),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
-
     setState(() => _hideButtons = false);
   }
 
@@ -233,8 +245,11 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
                         child: Text("No Programs Found"),
                       ),
                     ...filteredPrograms.asMap().entries.map((entry) {
+                      final idx = entry.key;
                       final prog = entry.value;
-                      final cardKey = GlobalKey();
+                      final cardKey = _cardKeys.length > idx
+                          ? _cardKeys[idx]
+                          : GlobalKey();
 
                       return Column(
                         children: [
