@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import '../../config.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
 import '../widgets/side_drawer.dart';
 import '../widgets/custom_app_bar.dart';
@@ -18,139 +22,100 @@ class ProgramsArchiveScreen extends StatefulWidget {
 
 class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
   final ScrollController _scrollController = ScrollController();
-  final GlobalKey _cardKey = GlobalKey();
   bool _hideButtons = false;
 
+  List<dynamic> programs = [];
+  List<dynamic> filteredPrograms = [];
+  bool _loading = true;
+  String? authToken;
+  String searchQuery = "";
+
   @override
-  void dispose() {
-    _scrollController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _fetchArchivedPrograms();
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: const SideDrawer(),
-      appBar: AppBar(
-        title: const Text("Archive Programs"),
-        backgroundColor: Colors.white,
-        actions: const [
-          AppBarMenu(),
-        ],
-      ),
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: ScrollToTopWrapper(
-        scrollController: _scrollController,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              RepaintBoundary(
-                key: _cardKey,
-                child: Card(
-                  color: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 3,
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: const [
-                            Text(
-                              "Product 1",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              "Quantity - 2500",
-                              style: TextStyle(fontSize: 16),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            const Text("2025-06-20", style: TextStyle(color: Colors.grey)),
-                            if (!_hideButtons)
-                              Row(
-                                children: [
-                                  OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      shape: const CircleBorder(),
-                                      side: const BorderSide(color: Colors.green),
-                                    ),
-                                    onPressed: () {
-                                      _showRestoreConfirmationDialog(context, () {
-                                        // Restore logic here
-                                      });
-                                    },
-                                    child: const Icon(Icons.restore_from_trash, color: Colors.green, size: 20),
-                                  ),
-                                  OutlinedButton(
-                                    style: OutlinedButton.styleFrom(
-                                      shape: const CircleBorder(),
-                                      side: const BorderSide(color: Colors.blueAccent),
-                                    ),
-                                    onPressed: _shareProgramCard,
-                                    child: const Icon(Icons.share, color: Colors.blueAccent, size: 20),
-                                  ),
-                                ],
-                              ),
-                          ],
-                        ),
-
-                        const Divider(height: 24),
-
-                        _buildTwoColumnSection([
-                          ["SIZE", "50X50/2"],
-                          ["CODE", "CS-201"],
-                          ["OD", "455X285X305"],
-                          ["GSM", "140 (120) 2/18"],
-                          ["COLOUR", "Black"],
-                          ["WEIGHT", "450"],
-                        ]),
-
-                        const SizedBox(height: 16),
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.shade50,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: const Text(
-                            "Note:\nYou may increase till 2650 quantity of boxes.",
-                            style: TextStyle(fontWeight: FontWeight.w500),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        const Text("Partitions", style: TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 12),
-
-                        _buildTwoColumnSection([
-                          ["SIZE", "423X15"],
-                          ["OD", "25x35x33"],
-                          ["CUTS", "D - 2, L - 5"],
-                          ["TYPE", "Vertical"],
-                          ["PLY", "3 Ply"],
-                          ["WEIGHT", "50"],
-                        ]),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+  Future<void> _fetchArchivedPrograms() async {
+    setState(() => _loading = true);
+    final prefs = await SharedPreferences.getInstance();
+    authToken = prefs.getString('auth_token');
+    final resp = await http.get(
+      Uri.parse('$baseUrl/corrugation/programs/archive/'),
+      headers: {
+        'Accept': 'application/json',
+        'Authorization': 'Token $authToken',
+      },
     );
+    if (resp.statusCode == 200) {
+      final body = jsonDecode(resp.body);
+      setState(() {
+        programs = body['programs'] ?? [];
+        filteredPrograms = programs;
+        _loading = false;
+      });
+    } else {
+      setState(() => _loading = false);
+    }
+  }
+
+  void _filterPrograms(String query) {
+    setState(() {
+      searchQuery = query;
+      filteredPrograms = programs.where((prog) {
+        return (prog['product_name']?.toLowerCase() ?? '').contains(query.toLowerCase())
+            || (prog['box_no']?.toLowerCase() ?? '').contains(query.toLowerCase())
+            || (prog['material_code']?.toLowerCase() ?? '').contains(query.toLowerCase());
+      }).toList();
+    });
+  }
+
+  Future<void> _restoreProgram(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    final authToken = prefs.getString('auth_token');
+    final resp = await http.patch(
+      Uri.parse('$baseUrl/corrugation/programs/restore/$id/'),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+        'Authorization': 'Token $authToken',
+      },
+      body: jsonEncode({'active': true}),
+    );
+    if (!mounted) return;
+    if (resp.statusCode == 200) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Program restored!"), backgroundColor: Colors.green),
+      );
+      await _fetchArchivedPrograms();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Failed to restore."), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _shareProgramCard(GlobalKey cardKey) async {
+    setState(() => _hideButtons = true);
+    await Future.delayed(const Duration(milliseconds: 100)); // let UI update
+
+    try {
+      RenderRepaintBoundary boundary = cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      Uint8List pngBytes = byteData!.buffer.asUint8List();
+
+      final directory = await getTemporaryDirectory();
+      final filePath = '${directory.path}/archive_program.png';
+      final file = File(filePath);
+      await file.writeAsBytes(pngBytes);
+
+      await Share.shareXFiles([XFile(filePath)], text: 'Archived Program Details');
+    } catch (e) {
+      debugPrint("Error sharing archive program: $e");
+    }
+
+    setState(() => _hideButtons = false);
   }
 
   Widget _buildTwoColumnSection(List<List<String>> items) {
@@ -210,27 +175,217 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
     );
   }
 
-  Future<void> _shareProgramCard() async {
-    setState(() => _hideButtons = true);
-    await Future.delayed(const Duration(milliseconds: 100)); // let UI update
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
-    try {
-      RenderRepaintBoundary boundary =
-          _cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
-      ui.Image image = await boundary.toImage(pixelRatio: 3.0);
-      ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
-      Uint8List pngBytes = byteData!.buffer.asUint8List();
+  // ----------- UI -----------
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: const SideDrawer(),
+      appBar: AppBar(
+        title: const Text("Archive Programs"),
+        backgroundColor: Colors.white,
+        actions: const [
+          AppBarMenu(),
+        ],
+      ),
+      backgroundColor: const Color(0xFFF8F9FA),
+      body: ScrollToTopWrapper(
+        scrollController: _scrollController,
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              // Search bar
+              Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: "Search Archived Programs...",
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 10,
+                          horizontal: 16,
+                        ),
+                      ),
+                      onChanged: _filterPrograms,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              _loading
+                  ? const Center(child: CircularProgressIndicator())
+                  : filteredPrograms.isEmpty
+                      ? const Padding(
+                          padding: EdgeInsets.only(top: 40),
+                          child: Text("No Archived Programs"),
+                        )
+                      : Column(
+                          children: filteredPrograms.asMap().entries.map((entry) {
+                            final prog = entry.value;
+                            final cardKey = GlobalKey();
 
-      final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/archive_program.png';
-      final file = File(filePath);
-      await file.writeAsBytes(pngBytes);
+                            return Column(
+                              children: [
+                                RepaintBoundary(
+                                  key: cardKey,
+                                  child: Card(
+                                    color: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 3,
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(16),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          // Product Name & Quantity
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(
+                                                prog['product_name'] ?? "",
+                                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                                              ),
+                                              Text(
+                                                "Quantity - ${prog['program_quantity'] ?? ''}",
+                                                style: const TextStyle(fontSize: 16),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 4),
 
-      await Share.shareXFiles([XFile(filePath)], text: 'Archived Program Details');
-    } catch (e) {
-      debugPrint("Error sharing archive program: $e");
-    }
+                                          // Date & Restore/Share
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Text(prog['program_date'] ?? "", style: const TextStyle(color: Colors.grey)),
+                                              if (!_hideButtons)
+                                                Row(
+                                                  children: [
+                                                    OutlinedButton(
+                                                      style: OutlinedButton.styleFrom(
+                                                        shape: const CircleBorder(),
+                                                        side: const BorderSide(color: Colors.green),
+                                                      ),
+                                                      onPressed: () {
+                                                        _showRestoreConfirmationDialog(context, () {
+                                                          _restoreProgram(prog['id']);
+                                                        });
+                                                      },
+                                                      child: const Icon(Icons.restore_from_trash, color: Colors.green, size: 20),
+                                                    ),
+                                                    OutlinedButton(
+                                                      style: OutlinedButton.styleFrom(
+                                                        shape: const CircleBorder(),
+                                                        side: const BorderSide(color: Colors.blueAccent),
+                                                      ),
+                                                      onPressed: () {
+                                                        _shareProgramCard(cardKey);
+                                                      },
+                                                      child: const Icon(Icons.share, color: Colors.blueAccent, size: 20),
+                                                    ),
+                                                  ],
+                                                ),
+                                            ],
+                                          ),
 
-    setState(() => _hideButtons = false);
+                                          const Divider(height: 24),
+
+                                          // Product Details
+                                          _buildTwoColumnSection([
+                                            ["SIZE", prog['size'] ?? ""],
+                                            ["CODE", prog['material_code'] ?? ""],
+                                            ["OD", "${prog['outer_length'] ?? ""}X${prog['outer_breadth'] ?? ""}X${prog['outer_depth'] ?? ""}"],
+                                            ["GSM", prog['gsm']?.toString() ?? ""],
+                                            ["COLOUR", prog['color'] ?? ""],
+                                            ["WEIGHT", prog['weight']?.toString() ?? ""],
+                                          ]),
+
+                                          const SizedBox(height: 16),
+                                          if ((prog['program_notes'] ?? "").isNotEmpty)
+                                            Container(
+                                              width: double.infinity,
+                                              padding: const EdgeInsets.all(12),
+                                              decoration: BoxDecoration(
+                                                color: Colors.blue.shade50,
+                                                borderRadius: BorderRadius.circular(8),
+                                              ),
+                                              child: Text(
+                                                "Note:\n${prog['program_notes']}",
+                                                style: const TextStyle(fontWeight: FontWeight.w500),
+                                              ),
+                                            ),
+                                          const SizedBox(height: 16),
+
+                                          // Partition display
+                                          if ((prog['partitions'] ?? []).isNotEmpty)
+                                            const Text("Partitions", style: TextStyle(fontWeight: FontWeight.bold)),
+                                          if ((prog['partitions'] ?? []).isNotEmpty)
+                                            const SizedBox(height: 12),
+                                          if ((prog['partitions'] ?? []).isNotEmpty)
+                                            ...((prog['partitions'] as List).asMap().entries.map((entry) {
+                                              final idx = entry.key + 1;
+                                              final part = entry.value;
+                                              return Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  Row(
+                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                    children: [
+                                                      Text(
+                                                        "Partition $idx",
+                                                        style: const TextStyle(fontWeight: FontWeight.bold),
+                                                      ),
+                                                      Text(
+                                                        part['partition_type']?.toString() ?? "",
+                                                        style: const TextStyle(
+                                                          fontWeight: FontWeight.bold,
+                                                          color: Colors.blue,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  const SizedBox(height: 6),
+                                                  _buildTwoColumnSection([
+                                                    ["SIZE", part['partition_size']?.toString() ?? ""],
+                                                    ["OD", part['partition_od']?.toString() ?? ""],
+                                                    ["DECKLE CUT", part['deckle_cut']?.toString() ?? ""],
+                                                    ["LENGTH CUT", part['length_cut']?.toString() ?? ""],
+                                                    ["PLY", part['ply_no']?.toString() ?? ""],
+                                                    ["WEIGHT", part['partition_weight']?.toString() ?? ""],
+                                                  ]),
+                                                  const SizedBox(height: 14),
+                                                ],
+                                              );
+                                            })),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+                              ],
+                            );
+                          }).toList(),
+                        ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
