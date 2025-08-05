@@ -14,10 +14,7 @@ import '../screens/information/faqs.dart';
 import '../screens/authentication/login.dart';
 import '../screens/authentication/signup.dart';
 import '../screens/authentication/logout.dart';
-import '../screens/authentication/verify_email_otp_screen.dart';
-import '../screens/authentication/forgot_password.dart';
-import '../screens/authentication/set_password.dart';
-import '../config.dart'; // Ensure baseUrl is imported
+import '../config.dart';
 
 class AppBarMenu extends StatelessWidget {
   const AppBarMenu({super.key});
@@ -30,9 +27,10 @@ class AppBarMenu extends StatelessWidget {
 
     if (isLoggedIn) {
       final url = Uri.parse('$baseUrl/tenant/register/');
-      final response = await http.get(url, headers: {
-        'Authorization': 'Token $authToken',
-      });
+      final response = await http.get(
+        url,
+        headers: {'Authorization': 'Token $authToken'},
+      );
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -42,65 +40,83 @@ class AppBarMenu extends StatelessWidget {
         }
       }
     }
-    return {
-      'logoUrl': tenantLogoUrl,
-      'isLoggedIn': isLoggedIn,
-    };
+    return {'logoUrl': tenantLogoUrl, 'isLoggedIn': isLoggedIn};
   }
 
   void handleMenuClick(BuildContext context, String value) {
     switch (value) {
       case 'company_profile':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const CompanyProfile()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const CompanyProfile()),
+        );
         break;
       case 'buyers_list':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const BuyersListScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const BuyersListScreen()),
+        );
         break;
       case 'pricing':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const PlansPricingScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PlansPricingScreen()),
+        );
         break;
       case 'support':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const ContactSupportScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const ContactSupportScreen()),
+        );
         break;
       case 'about':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const AboutUsScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const AboutUsScreen()),
+        );
         break;
       case 'privacy':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const PrivacyPolicyScreen()),
+        );
         break;
       case 'terms':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const TermsConditionsScreen()));
-        break;
-      case 'refund':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const RefundPolicyScreen()));
-        break;
-      case 'faq':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const FAQsScreen()));
-        break;
-      case 'login':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
-        break;
-      case 'signup':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const SignupScreen()));
-        break;
-      case 'logout':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const LogoutScreen()));
-        break;
-      case 'verify_email':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const VerifyEmailOtpScreen()));
-        break;
-      case 'forgot_password':
-        Navigator.push(context, MaterialPageRoute(builder: (context) => const ForgotPasswordScreen()));
-        break;
-      case 'set_password':
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const SetPasswordScreen(
-              uid: 'exampleUID',
-              token: 'exampleTOKEN',
-            ),
+            builder: (context) => const TermsConditionsScreen(),
           ),
+        );
+        break;
+      case 'refund':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const RefundPolicyScreen()),
+        );
+        break;
+      case 'faq':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FAQsScreen()),
+        );
+        break;
+      case 'login':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginScreen()),
+        );
+        break;
+      case 'signup':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const SignupScreen()),
+        );
+        break;
+      case 'logout':
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const LogoutScreen()),
         );
         break;
     }
@@ -113,7 +129,8 @@ class AppBarMenu extends StatelessWidget {
       builder: (context, snapshot) {
         Widget avatar;
         bool isLoggedIn = false;
-        if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.done &&
+            snapshot.hasData) {
           isLoggedIn = snapshot.data!['isLoggedIn'] ?? false;
           String? logoUrl = snapshot.data!['logoUrl'];
           if (logoUrl != null) {
@@ -139,7 +156,10 @@ class AppBarMenu extends StatelessWidget {
 
         // Build menu items
         List<PopupMenuEntry<String>> menuItems = [
-          const PopupMenuItem(value: 'company_profile', child: Text('Company Profile')),
+          const PopupMenuItem(
+            value: 'company_profile',
+            child: Text('Company Profile'),
+          ),
           const PopupMenuItem(value: 'buyers_list', child: Text('Buyers List')),
           const PopupMenuDivider(),
           const PopupMenuItem(value: 'pricing', child: Text('Pricing & Plans')),
@@ -147,7 +167,10 @@ class AppBarMenu extends StatelessWidget {
           const PopupMenuDivider(),
           const PopupMenuItem(value: 'about', child: Text('About Us')),
           const PopupMenuItem(value: 'privacy', child: Text('Privacy Policy')),
-          const PopupMenuItem(value: 'terms', child: Text('Terms and Conditions')),
+          const PopupMenuItem(
+            value: 'terms',
+            child: Text('Terms and Conditions'),
+          ),
           const PopupMenuItem(value: 'refund', child: Text('Refund Policy')),
           const PopupMenuItem(value: 'faq', child: Text("FAQ's")),
           const PopupMenuDivider(),
@@ -155,10 +178,12 @@ class AppBarMenu extends StatelessWidget {
 
         if (isLoggedIn) {
           // Show only logout for auth section
-          menuItems.add(const PopupMenuItem(
-            value: 'logout',
-            child: Text('Logout', style: TextStyle(color: Colors.red)),
-          ));
+          menuItems.add(
+            const PopupMenuItem(
+              value: 'logout',
+              child: Text('Logout', style: TextStyle(color: Colors.red)),
+            ),
+          );
         } else {
           // Show only login/signup for auth section
           menuItems.addAll([
@@ -170,7 +195,9 @@ class AppBarMenu extends StatelessWidget {
         return PopupMenuButton<String>(
           onSelected: (value) => handleMenuClick(context, value),
           offset: const Offset(0, 50),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
           itemBuilder: (context) => menuItems,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 15.0),

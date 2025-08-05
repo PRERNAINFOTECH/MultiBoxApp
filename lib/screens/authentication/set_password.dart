@@ -1,62 +1,66 @@
-// screens/auth/set_password_screen.dart
-
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 import '../../widgets/side_drawer.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../config.dart';
+import 'login.dart';
 
 class SetPasswordScreen extends StatefulWidget {
-  final String uid;
-  final String token;
-
-  const SetPasswordScreen({
-    super.key,
-    required this.uid,
-    required this.token,
-  });
-
+  final String email;
+  const SetPasswordScreen({super.key, required this.email});
   @override
   State<SetPasswordScreen> createState() => _SetPasswordScreenState();
 }
 
 class _SetPasswordScreenState extends State<SetPasswordScreen> {
   final ScrollController scrollController = ScrollController();
+  final TextEditingController otpController = TextEditingController();
   final TextEditingController newPasswordController = TextEditingController();
-  final TextEditingController confirmPasswordController = TextEditingController();
-
+  final TextEditingController confirmPasswordController =
+      TextEditingController();
   bool isSubmitting = false;
 
   void _resetPassword() async {
+    final otp = otpController.text.trim();
     final password = newPasswordController.text;
     final confirmPassword = confirmPasswordController.text;
 
-    if (password.isEmpty || confirmPassword.isEmpty) {
+    if (otp.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       _showMessage("Please fill in all fields");
       return;
     }
-
     if (password != confirmPassword) {
       _showMessage("Passwords do not match");
       return;
     }
-
     setState(() => isSubmitting = true);
-
     try {
-      // Submit new password to backend
-      // Example POST to /accounts/password/reset/confirm/ with { uid, token, new_password1, new_password2 }
-
-      // await http.post(Uri.parse('https://yourdomain.com/accounts/password/reset/confirm/'), body: {
-      //   "uid": widget.uid,
-      //   "token": widget.token,
-      //   "new_password1": password,
-      //   "new_password2": confirmPassword,
-      // });
-
-      _showMessage("Password reset successful. Please login.");
-      Navigator.pushReplacementNamed(context, "/login");
+      final response = await http.post(
+        Uri.parse("$baseUrl/m-auth/password-reset/verify-otp/"),
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({
+          "email": widget.email,
+          "otp": otp,
+          "new_password": password,
+        }),
+      );
+      final data = json.decode(response.body);
+      if (response.statusCode == 200) {
+        _showMessage("Password reset successful. Please login.");
+        await Future.delayed(const Duration(milliseconds: 800));
+        if (!mounted) return;
+        await Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+        );
+      } else {
+        final error = data['error'] ?? data.values.first;
+        _showMessage(error.toString());
+      }
     } catch (e) {
-      _showMessage("Failed to reset password. Link may be expired.");
+      _showMessage("Failed to reset password. Try again.");
     } finally {
       setState(() => isSubmitting = false);
     }
@@ -88,38 +92,78 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const SizedBox(height: 60),
-                  const Icon(Icons.lock_outline, size: 80, color: Color(0xFF4A68F2)),
+                  const Icon(
+                    Icons.lock_outline,
+                    size: 80,
+                    color: Color(0xFF4A68F2),
+                  ),
                   const SizedBox(height: 20),
                   const Text(
-                    "Create a New Password",
+                    "Enter OTP & New Password",
                     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 10),
-                  const Text(
-                    "Enter your new password below.",
+                  Text(
+                    "OTP has been sent to ${widget.email}.",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.black87),
+                    style: const TextStyle(color: Colors.black87),
                   ),
                   const SizedBox(height: 30),
+                  TextField(
+                    controller: otpController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.characters,
+                    decoration: InputDecoration(
+                      hintText: "Enter OTP",
+                      filled: true,
+                      fillColor: Colors.white,
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(30),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
                   _buildPasswordField("New Password", newPasswordController),
                   const SizedBox(height: 12),
-                  _buildPasswordField("Confirm New Password", confirmPasswordController),
+                  _buildPasswordField(
+                    "Confirm New Password",
+                    confirmPasswordController,
+                  ),
                   const SizedBox(height: 20),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: isSubmitting ? null : _resetPassword,
-                      style: _buttonStyle(),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF4A68F2),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                      ),
                       child: isSubmitting
                           ? const CircularProgressIndicator()
-                          : const Text("Set Password", style: TextStyle(fontSize: 16)),
+                          : const Text(
+                              "Set Password",
+                              style: TextStyle(fontSize: 16),
+                            ),
                     ),
                   ),
                   const SizedBox(height: 10),
                   TextButton(
-                    onPressed: () => Navigator.pushReplacementNamed(context, "/login"),
+                    onPressed: () async {
+                      await Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
                     child: const Text("Back to Login"),
-                  )
+                  ),
                 ],
               ),
             ),
@@ -137,18 +181,12 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
         hintText: hint,
         filled: true,
         fillColor: Colors.white,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(30)),
       ),
-    );
-  }
-
-  ButtonStyle _buttonStyle() {
-    return ElevatedButton.styleFrom(
-      backgroundColor: const Color(0xFF4A68F2),
-      foregroundColor: Colors.white,
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
     );
   }
 }
