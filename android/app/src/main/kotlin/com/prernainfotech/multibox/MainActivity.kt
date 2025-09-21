@@ -1,4 +1,4 @@
-package com.application.multibox
+package com.prernainfotech.multibox
 
 import io.flutter.embedding.android.FlutterActivity
 
