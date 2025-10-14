@@ -1,7 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../config.dart';
+import '../config.dart' as config;
 import 'subscription_service.dart';
 
 class AppInitializer {
@@ -19,7 +19,7 @@ class AppInitializer {
   static Future<void> _checkAndUpdateSubscriptionStatus(String token) async {
     try {
       final response = await http.get(
-        Uri.parse('${Config.baseUrl}/billing/subscription/status/'),
+        Uri.parse('${config.baseUrl}/billing/subscription/status/'),
         headers: {
           'Authorization': 'Token $token',
         },

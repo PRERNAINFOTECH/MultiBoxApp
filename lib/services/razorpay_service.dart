@@ -2,11 +2,14 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../config.dart';
+import '../config.dart' as config;
 
 class RazorpayService {
   static final Razorpay _razorpay = Razorpay();
-  static const String _baseUrl = Config.baseUrl;
+  static const String _baseUrl = config.baseUrl;
+  
+  // Public getter for accessing the Razorpay instance
+  static Razorpay get razorpay => _razorpay;
 
   static void initialize() {
     _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handlePaymentSuccess);

@@ -7,7 +7,7 @@ import '../../widgets/side_drawer.dart';
 import '../../widgets/custom_app_bar.dart';
 import '../../services/razorpay_service.dart';
 import '../../services/subscription_service.dart';
-import '../../config.dart';
+import '../../config.dart' as config;
 
 class PlansPricingScreen extends StatefulWidget {
   const PlansPricingScreen({super.key});
@@ -153,7 +153,7 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
 
       // Open Razorpay payment
       RazorpayService.openPayment(
-        keyId: Config.razorpayKeyId,
+        keyId: config.razorpayKeyId,
         orderId: orderData['order_id'],
         name: 'MultiBox',
         description: '${plan['name']} Plan - ${isMonthly ? 'Monthly' : 'Yearly'}',
@@ -164,7 +164,7 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
       );
 
       // Listen for payment success
-      RazorpayService._razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) async {
+      RazorpayService.razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) async {
         await _verifyPayment(response);
       });
 
