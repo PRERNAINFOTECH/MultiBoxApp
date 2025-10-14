@@ -541,7 +541,7 @@ class _PaperReelsScreenState extends State<PaperReelsScreen> {
                                       }
                                     : null,
                               ),
-                              Text("Page $page of $totalPages"),
+                              Text("$page of $totalPages"),
                               IconButton(
                                 icon: const Icon(Icons.chevron_right),
                                 onPressed: page < totalPages

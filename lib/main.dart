@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'screens/authentication/login.dart';
 import 'screens/authentication/verify_email_otp_screen.dart';
 import 'screens/stocks.dart';
+import 'services/app_initializer.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,6 +27,8 @@ class MyApp extends StatelessWidget {
     }
 
     if (authToken != null && authToken.isNotEmpty) {
+      // Initialize app data including subscription status
+      await AppInitializer.initializeApp();
       return const StocksScreen(); // Logged-in home screen
     }
 

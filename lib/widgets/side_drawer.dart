@@ -3,7 +3,6 @@ import '../screens/products.dart';
 import '../screens/products_archive.dart';
 import '../screens/paperreels.dart';
 import '../screens/paperreels_summary.dart';
-import '../screens/paperreels_stock.dart';
 import '../screens/stocks.dart';
 import '../screens/purchaseorders.dart';
 import '../screens/purchaseorders_archive.dart';
@@ -11,7 +10,8 @@ import '../screens/productions.dart';
 import '../screens/productions_archive.dart';
 import '../screens/programs.dart';
 import '../screens/programs_archive.dart';
-import '../screens/challans.dart';
+import '../screens/plan_support/plans_and_pricing.dart';
+import '../services/subscription_service.dart';
 
 class SideDrawer extends StatefulWidget {
   const SideDrawer({super.key});
@@ -22,6 +22,20 @@ class SideDrawer extends StatefulWidget {
 
 class _SideDrawerState extends State<SideDrawer> {
   String? _currentlyExpandedTileId;
+  bool hasActiveSubscription = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkSubscriptionStatus();
+  }
+
+  Future<void> _checkSubscriptionStatus() async {
+    final status = await SubscriptionService.hasActiveSubscription();
+    setState(() {
+      hasActiveSubscription = status;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,44 +63,54 @@ class _SideDrawerState extends State<SideDrawer> {
               ),
             ),
 
-            // Stock item without accordion
+            // Plans and Pricing - Always accessible
             ListTile(
-              leading: const Icon(Icons.inventory, color: Colors.white),
-              title: const Text('Stock', style: TextStyle(color: Colors.white)),
+              leading: const Icon(Icons.credit_card, color: Colors.white),
+              title: const Text('Plans & Pricing', style: TextStyle(color: Colors.white)),
               onTap: () {
                 Navigator.of(context).pop();
                 Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => StocksScreen()),
+                  MaterialPageRoute(builder: (_) => const PlansPricingScreen()),
                 );
               },
             ),
 
-            // Accordion sections
+            // Stock item without accordion - Paid feature
+            ListTile(
+              leading: const Icon(Icons.inventory, color: Colors.white),
+              title: const Text('Stock', style: TextStyle(color: Colors.white)),
+              onTap: hasActiveSubscription ? () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => StocksScreen()),
+                );
+              } : () {
+                Navigator.of(context).pop();
+                _showSubscriptionRequiredDialog(context);
+              },
+            ),
+
+            // Accordion sections - All paid features
             _buildAccordionItem(context, 'reels', Icons.receipt_long, 'Paper Reels', [
               {'title': 'Summary', 'screen': PaperReelsSummaryScreen()},
               {'title': 'Reels', 'screen': PaperReelsScreen()},
-              {'title': 'Stock', 'screen': PaperReelStockScreen()},
-            ]),
+            ], hasActiveSubscription),
             _buildAccordionItem(context, 'po', Icons.shopping_cart, 'Purchase Order', [
               {'title': 'Purchase Orders', 'screen': PurchaseOrdersScreen()},
               {'title': 'Archive', 'screen': PurchaseOrdersArchiveScreen()},
-            ]),
+            ], hasActiveSubscription),
             _buildAccordionItem(context, 'production', Icons.build, 'Production', [
               {'title': 'Productions', 'screen': ProductionsScreen()},
               {'title': 'Archive', 'screen': ProductionsArchiveScreen()},
-            ]),
+            ], hasActiveSubscription),
             _buildAccordionItem(context, 'programs', Icons.event_note, 'Program', [
               {'title': 'Programs', 'screen': ProgramsScreen()},
               {'title': 'Archive', 'screen': ProgramsArchiveScreen()},
-            ]),
+            ], hasActiveSubscription),
             _buildAccordionItem(context, 'products', Icons.all_inbox, 'Products', [
               {'title': 'Products', 'screen': ProductsScreen()},
               {'title': 'Archive', 'screen': ProductsArchiveScreen()},
-            ]),
-            _buildAccordionItem(context, 'challans', Icons.description, 'Challan', [
-              {'title': 'Create Challan', 'screen': ChallansScreen()},
-              {'title': 'Challans', 'screen': ChallansScreen()},
-            ]),
+            ], hasActiveSubscription),
 
             const SizedBox(height: 10),
             Center(
@@ -118,6 +142,7 @@ class _SideDrawerState extends State<SideDrawer> {
     IconData icon,
     String title,
     List<Map<String, dynamic>> subItems,
+    bool hasAccess,
   ) {
     final bool isExpanded = _currentlyExpandedTileId == id;
 
@@ -152,11 +177,14 @@ class _SideDrawerState extends State<SideDrawer> {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     contentPadding: const EdgeInsets.symmetric(horizontal: 24.0),
                     title: Text(item['title'], style: const TextStyle(color: Colors.black)),
-                    onTap: () {
+                    onTap: hasAccess ? () {
                       Navigator.of(context).pop();
                       Navigator.of(context).push(
                         MaterialPageRoute(builder: (_) => item['screen']),
                       );
+                    } : () {
+                      Navigator.of(context).pop();
+                      _showSubscriptionRequiredDialog(context);
                     },
                   );
                 }).toList(),
@@ -165,6 +193,41 @@ class _SideDrawerState extends State<SideDrawer> {
           )
         ],
       ),
+    );
+  }
+
+  void _showSubscriptionRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Subscription Required'),
+          content: const Text(
+            'This feature is available for paid subscribers only. Please purchase a plan to access all features.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const PlansPricingScreen()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF4A68F2),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('View Plans'),
+            ),
+          ],
+        );
+      },
     );
   }
 }

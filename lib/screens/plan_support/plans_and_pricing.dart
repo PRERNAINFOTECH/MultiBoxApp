@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
 import '../../widgets/side_drawer.dart';
 import '../../widgets/custom_app_bar.dart';
+import '../../services/razorpay_service.dart';
+import '../../services/subscription_service.dart';
+import '../../config.dart';
 
 class PlansPricingScreen extends StatefulWidget {
   const PlansPricingScreen({super.key});
@@ -13,6 +19,12 @@ class PlansPricingScreen extends StatefulWidget {
 class _PlansPricingScreenState extends State<PlansPricingScreen> {
   final ScrollController _scrollController = ScrollController();
   bool isMonthly = true;
+  bool isLoading = false;
+  bool hasActiveSubscription = false;
+  List<Map<String, dynamic>> plans = [];
+  String? userToken;
+  String? userEmail;
+  String? userPhone;
 
   final planData = {
     'monthly': [
@@ -80,6 +92,108 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
       },
     ]
   };
+
+  @override
+  void initState() {
+    super.initState();
+    RazorpayService.initialize();
+    _loadUserData();
+    _checkSubscriptionStatus();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userToken = prefs.getString('token');
+      userEmail = prefs.getString('email');
+      userPhone = prefs.getString('phone');
+    });
+  }
+
+  Future<void> _checkSubscriptionStatus() async {
+    if (userToken == null) return;
+    
+    setState(() => isLoading = true);
+    
+    try {
+      final status = await RazorpayService.getSubscriptionStatus(token: userToken!);
+      if (status != null) {
+        setState(() {
+          hasActiveSubscription = status['has_active_subscription'] ?? false;
+        });
+        await SubscriptionService.saveSubscriptionStatus(hasActiveSubscription);
+      }
+    } catch (e) {
+      debugPrint('Error checking subscription status: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _handlePayment(Map<String, dynamic> plan) async {
+    if (userToken == null) {
+      Fluttertoast.showToast(msg: 'Please login first');
+      return;
+    }
+
+    setState(() => isLoading = true);
+
+    try {
+      // Create order
+      final orderData = await RazorpayService.createOrder(
+        planId: plan['id'],
+        amount: plan['price'],
+        token: userToken!,
+      );
+
+      if (orderData == null) {
+        Fluttertoast.showToast(msg: 'Failed to create order');
+        return;
+      }
+
+      // Open Razorpay payment
+      RazorpayService.openPayment(
+        keyId: Config.razorpayKeyId,
+        orderId: orderData['order_id'],
+        name: 'MultiBox',
+        description: '${plan['name']} Plan - ${isMonthly ? 'Monthly' : 'Yearly'}',
+        amount: plan['price'],
+        prefillEmail: userEmail ?? '',
+        prefillContact: userPhone ?? '',
+        options: {},
+      );
+
+      // Listen for payment success
+      RazorpayService._razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) async {
+        await _verifyPayment(response);
+      });
+
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'Payment failed: $e');
+    } finally {
+      setState(() => isLoading = false);
+    }
+  }
+
+  Future<void> _verifyPayment(PaymentSuccessResponse response) async {
+    try {
+      final success = await RazorpayService.verifyPayment(
+        paymentId: response.paymentId!,
+        orderId: response.orderId!,
+        signature: response.signature!,
+        token: userToken!,
+      );
+
+      if (success) {
+        Fluttertoast.showToast(msg: 'Payment successful! Subscription activated.');
+        await _checkSubscriptionStatus();
+      } else {
+        Fluttertoast.showToast(msg: 'Payment verification failed');
+      }
+    } catch (e) {
+      Fluttertoast.showToast(msg: 'Payment verification failed: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -216,12 +330,29 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: hasActiveSubscription ? null : () => _handlePayment({
+                'id': 1, // This should be the actual plan ID from backend
+                'name': title,
+                'price': double.parse(price.replaceAll('₹', '').replaceAll(',', '')),
+              }),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFCDD9FD),
-                foregroundColor: const Color(0xFF4A68F2),
+                backgroundColor: hasActiveSubscription 
+                    ? const Color(0xFFCDD9FD) 
+                    : const Color(0xFF4A68F2),
+                foregroundColor: hasActiveSubscription 
+                    ? const Color(0xFF4A68F2) 
+                    : Colors.white,
               ),
-              child: const Text("You Have Active Plan"),
+              child: isLoading 
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                    )
+                  : Text(hasActiveSubscription ? "You Have Active Plan" : "Purchase Plan"),
             ),
           ),
         ],
@@ -232,6 +363,7 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   @override
   void dispose() {
     _scrollController.dispose();
+    RazorpayService.dispose();
     super.dispose();
   }
 }
