@@ -1,2 +1,2 @@
-const String baseUrl = "https://api.multibox.co.in";
-const String razorpayKeyId = "rzp_test_1234567890"; // Replace with your actual Razorpay key
+const String baseUrl = "http://localhost:8000";
+const String razorpayKeyId = "YOUR_RAZORPAY_KEY_ID"; // Replace with your actual Razorpay Key ID
