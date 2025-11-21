@@ -1,6 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'dart:developer' as developer;
 import '../config.dart' as config;
 import 'subscription_service.dart';
 
@@ -8,7 +9,7 @@ class AppInitializer {
   static Future<void> initializeApp() async {
     // Check if user is logged in
     final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    final token = prefs.getString('auth_token');
     
     if (token != null) {
       // Check subscription status
@@ -38,7 +39,11 @@ class AppInitializer {
       }
     } catch (e) {
       // Handle error silently or log it
-      print('Error checking subscription status: $e');
+      developer.log(
+        'Error checking subscription status: $e',
+        name: 'AppInitializer',
+        error: e,
+      );
     }
   }
 }
