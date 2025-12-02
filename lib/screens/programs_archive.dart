@@ -8,10 +8,12 @@ import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../config.dart';
+import '../config.dart';
+import '../theme/app_theme.dart';
+import '../widgets/animated_widgets.dart';
+import '../widgets/app_drawer.dart';
+import '../widgets/app_bar_widget.dart';
 import '../widgets/scroll_to_top_wrapper.dart';
-import '../widgets/side_drawer.dart';
-import '../widgets/custom_app_bar.dart';
 
 class ProgramsArchiveScreen extends StatefulWidget {
   const ProgramsArchiveScreen({super.key});
@@ -66,9 +68,11 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
     setState(() {
       searchQuery = query;
       filteredPrograms = programs.where((prog) {
-        return (prog['product_name']?.toLowerCase() ?? '').contains(query.toLowerCase())
-            || (prog['box_no']?.toLowerCase() ?? '').contains(query.toLowerCase())
-            || (prog['material_code']?.toLowerCase() ?? '').contains(query.toLowerCase());
+        return (prog['product_name']?.toLowerCase() ?? '')
+                .contains(query.toLowerCase()) ||
+            (prog['box_no']?.toLowerCase() ?? '').contains(query.toLowerCase()) ||
+            (prog['material_code']?.toLowerCase() ?? '')
+                .contains(query.toLowerCase());
       }).toList();
       _cardKeys = List.generate(filteredPrograms.length, (_) => GlobalKey());
       _hideButtonsList = List.generate(filteredPrograms.length, (_) => false);
@@ -90,29 +94,40 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
     if (!mounted) return;
     if (resp.statusCode == 200) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Program restored!"), backgroundColor: Colors.green),
+        SnackBar(
+          content: const Text("Program restored!"),
+          backgroundColor: AppColors.success,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
       await _fetchArchivedPrograms();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to restore."), backgroundColor: Colors.red),
+        SnackBar(
+          content: const Text("Failed to restore program."),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
     }
   }
 
-  // Individual card share logic, _hideButtonsList used per index
   Future<void> _shareProgramCard(GlobalKey cardKey, int idx) async {
     setState(() => _hideButtonsList[idx] = true);
-    await Future.delayed(const Duration(milliseconds: 200)); // let UI update
+    await Future.delayed(const Duration(milliseconds: 200));
 
     try {
-      RenderRepaintBoundary boundary = cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
+      RenderRepaintBoundary boundary =
+          cardKey.currentContext!.findRenderObject() as RenderRepaintBoundary;
       ui.Image image = await boundary.toImage(pixelRatio: 3.0);
       ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       Uint8List pngBytes = byteData!.buffer.asUint8List();
 
       final directory = await getTemporaryDirectory();
-      final filePath = '${directory.path}/archive_program_${DateTime.now().millisecondsSinceEpoch}.png';
+      final filePath =
+          '${directory.path}/archive_program_${DateTime.now().millisecondsSinceEpoch}.png';
       final file = File(filePath);
       await file.writeAsBytes(pngBytes);
 
@@ -121,68 +136,16 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
       debugPrint("Error sharing archive program: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Failed to share image."), backgroundColor: Colors.red),
+        SnackBar(
+          content: const Text("Failed to share image."),
+          backgroundColor: AppColors.error,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
       );
     }
 
     setState(() => _hideButtonsList[idx] = false);
-  }
-
-  Widget _buildTwoColumnSection(List<List<String>> items) {
-    return GridView.count(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 3.5,
-      crossAxisSpacing: 16,
-      mainAxisSpacing: 12,
-      children: items.map((item) => _buildDetailItem(item[0], item[1])).toList(),
-    );
-  }
-
-  Widget _buildDetailItem(String title, String value) {
-    return RichText(
-      text: TextSpan(
-        text: "$title\n",
-        style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.blue, fontSize: 12),
-        children: [
-          TextSpan(
-            text: value,
-            style: const TextStyle(fontWeight: FontWeight.normal, color: Colors.black, fontSize: 14),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _showRestoreConfirmationDialog(BuildContext context, VoidCallback onRestore) async {
-    await showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          title: const Text("Restore Program"),
-          content: const Text("Are you sure you want to restore this program?"),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.green,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                Navigator.of(context).pop();
-                onRestore();
-              },
-              child: const Text("Restore"),
-            ),
-          ],
-        );
-      },
-    );
   }
 
   @override
@@ -191,213 +154,551 @@ class _ProgramsArchiveScreenState extends State<ProgramsArchiveScreen> {
     super.dispose();
   }
 
-  // ----------- UI -----------
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const SideDrawer(),
-      appBar: AppBar(
-        title: const Text("Archive Programs"),
-        backgroundColor: Colors.white,
-        actions: const [
-          AppBarMenu(),
-        ],
-      ),
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: ScrollToTopWrapper(
-        scrollController: _scrollController,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            children: [
-              // Search bar
-              Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      decoration: InputDecoration(
-                        hintText: "Search Archived Programs...",
-                        prefixIcon: const Icon(Icons.search),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(10),
+      drawer: const AppDrawer(),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const GradientAppBar(title: 'Archived Programs'),
+          Expanded(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  )
+                : ScrollToTopWrapper(
+                    scrollController: _scrollController,
+                    child: RefreshIndicator(
+                      onRefresh: _fetchArchivedPrograms,
+                      color: AppColors.primary,
+                      child: CustomScrollView(
+                        controller: _scrollController,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
+                              children: [
+                                FadeInWidget(
+                                  child: _buildSearchBar(),
+                                ),
+                                const SizedBox(height: 12),
+                                FadeInWidget(
+                                  delay: const Duration(milliseconds: 100),
+                                  child: _buildArchiveInfoBanner(),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        filled: true,
-                        fillColor: Colors.white,
-                        contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10,
-                          horizontal: 16,
-                        ),
+                        if (filteredPrograms.isEmpty)
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: _buildEmptyState(),
+                          )
+                        else
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final cardKey = _cardKeys.length > index
+                                      ? _cardKeys[index]
+                                      : GlobalKey();
+                                  final hideBtns = _hideButtonsList.length > index
+                                      ? _hideButtonsList[index]
+                                      : false;
+                                  return SlideInWidget(
+                                    delay: Duration(milliseconds: 100 + (index * 50)),
+                                    child: _buildProgramCard(
+                                      filteredPrograms[index],
+                                      cardKey,
+                                      index,
+                                      hideBtns,
+                                    ),
+                                  );
+                                },
+                                childCount: filteredPrograms.length,
+                              ),
+                            ),
+                          ),
+                          const SliverToBoxAdapter(
+                            child: SizedBox(height: 24),
+                          ),
+                        ],
                       ),
-                      onChanged: _filterPrograms,
                     ),
                   ),
-                ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.small,
+      ),
+      child: TextField(
+        onChanged: _filterPrograms,
+        style: AppTextStyles.bodyMedium,
+        decoration: InputDecoration(
+          hintText: 'Search archived programs...',
+          hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
+          prefixIcon: Icon(Icons.search, color: AppColors.textLight, size: 22),
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildArchiveInfoBanner() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: AppColors.warning.withValues(alpha: 0.3),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            Icons.archive_outlined,
+            color: AppColors.warning,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'These programs have been archived. Tap the restore button to bring them back.',
+              style: AppTextStyles.bodySmall.copyWith(
+                color: AppColors.warning,
               ),
-              const SizedBox(height: 16),
-              _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : filteredPrograms.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.only(top: 40),
-                          child: Text("No Archived Programs"),
-                        )
-                      : Column(
-                          children: filteredPrograms.asMap().entries.map((entry) {
-                            final idx = entry.key;
-                            final prog = entry.value;
-                            final cardKey = _cardKeys.length > idx ? _cardKeys[idx] : GlobalKey();
-                            final hideBtns = _hideButtonsList.length > idx ? _hideButtonsList[idx] : false;
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-                            return Column(
+  Widget _buildEmptyState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.archive_outlined,
+            size: 64,
+            color: AppColors.textLight,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            searchQuery.isNotEmpty ? 'No programs found' : 'No archived programs',
+            style: AppTextStyles.bodyLarge.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            searchQuery.isNotEmpty
+                ? 'Try a different search term'
+                : 'Programs you archive will appear here',
+            style: AppTextStyles.bodyMedium.copyWith(
+              color: AppColors.textLight,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProgramCard(
+    dynamic prog,
+    GlobalKey cardKey,
+    int index,
+    bool hideButtons,
+  ) {
+    final partitions = prog['partitions'] ?? [];
+
+    return RepaintBoundary(
+      key: cardKey,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 16),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: AppShadows.medium,
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: AppColors.warning.withValues(alpha: 0.1),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
                               children: [
-                                RepaintBoundary(
-                                  key: cardKey,
-                                  child: Card(
-                                    color: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 3,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(16),
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          // Product Name & Quantity
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(
-                                                prog['product_name'] ?? "",
-                                                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                                              ),
-                                              Text(
-                                                "Quantity - ${prog['program_quantity'] ?? ''}",
-                                                style: const TextStyle(fontSize: 16),
-                                              ),
-                                            ],
-                                          ),
-                                          const SizedBox(height: 4),
-
-                                          // Date & Restore/Share
-                                          Row(
-                                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Text(prog['program_date'] ?? "", style: const TextStyle(color: Colors.grey)),
-                                              if (!hideBtns)
-                                                Row(
-                                                  children: [
-                                                    OutlinedButton(
-                                                      style: OutlinedButton.styleFrom(
-                                                        shape: const CircleBorder(),
-                                                        side: const BorderSide(color: Colors.green),
-                                                      ),
-                                                      onPressed: () {
-                                                        _showRestoreConfirmationDialog(context, () {
-                                                          _restoreProgram(prog['id']);
-                                                        });
-                                                      },
-                                                      child: const Icon(Icons.restore_from_trash, color: Colors.green, size: 20),
-                                                    ),
-                                                    OutlinedButton(
-                                                      style: OutlinedButton.styleFrom(
-                                                        shape: const CircleBorder(),
-                                                        side: const BorderSide(color: Colors.blueAccent),
-                                                      ),
-                                                      onPressed: () {
-                                                        _shareProgramCard(cardKey, idx);
-                                                      },
-                                                      child: const Icon(Icons.share, color: Colors.blueAccent, size: 20),
-                                                    ),
-                                                  ],
-                                                ),
-                                            ],
-                                          ),
-
-                                          const Divider(height: 24),
-
-                                          // Product Details
-                                          _buildTwoColumnSection([
-                                            ["SIZE", prog['size'] ?? ""],
-                                            ["CODE", prog['material_code'] ?? ""],
-                                            ["OD", "${prog['outer_length'] ?? ""}X${prog['outer_breadth'] ?? ""}X${prog['outer_depth'] ?? ""}"],
-                                            ["GSM", prog['gsm']?.toString() ?? ""],
-                                            ["COLOUR", prog['color'] ?? ""],
-                                            ["WEIGHT", prog['weight']?.toString() ?? ""],
-                                          ]),
-
-                                          const SizedBox(height: 16),
-                                          if ((prog['program_notes'] ?? "").isNotEmpty)
-                                            Container(
-                                              width: double.infinity,
-                                              padding: const EdgeInsets.all(12),
-                                              decoration: BoxDecoration(
-                                                color: Colors.blue.shade50,
-                                                borderRadius: BorderRadius.circular(8),
-                                              ),
-                                              child: Text(
-                                                "Note:\n${prog['program_notes']}",
-                                                style: const TextStyle(fontWeight: FontWeight.w500),
-                                              ),
-                                            ),
-                                          const SizedBox(height: 16),
-
-                                          // Partition display
-                                          if ((prog['partitions'] ?? []).isNotEmpty)
-                                            const Text("Partitions", style: TextStyle(fontWeight: FontWeight.bold)),
-                                          if ((prog['partitions'] ?? []).isNotEmpty)
-                                            const SizedBox(height: 12),
-                                          if ((prog['partitions'] ?? []).isNotEmpty)
-                                            ...((prog['partitions'] as List).asMap().entries.map((entry) {
-                                              final pidx = entry.key + 1;
-                                              final part = entry.value;
-                                              return Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Row(
-                                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                    children: [
-                                                      Text(
-                                                        "Partition $pidx",
-                                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                                      ),
-                                                      Text(
-                                                        part['partition_type']?.toString() ?? "",
-                                                        style: const TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          color: Colors.blue,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                  const SizedBox(height: 6),
-                                                  _buildTwoColumnSection([
-                                                    ["SIZE", part['partition_size']?.toString() ?? ""],
-                                                    ["OD", part['partition_od']?.toString() ?? ""],
-                                                    ["DECKLE CUT", part['deckle_cut']?.toString() ?? ""],
-                                                    ["LENGTH CUT", part['length_cut']?.toString() ?? ""],
-                                                    ["PLY", part['ply_no']?.toString() ?? ""],
-                                                    ["WEIGHT", part['partition_weight']?.toString() ?? ""],
-                                                  ]),
-                                                  const SizedBox(height: 14),
-                                                ],
-                                              );
-                                            })),
-                                        ],
-                                      ),
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Icon(
+                                    Icons.archive,
+                                    color: AppColors.warning,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    prog['product_name'] ?? '',
+                                    style: AppTextStyles.titleMedium.copyWith(
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
-                                const SizedBox(height: 16),
                               ],
-                            );
-                          }).toList(),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.warning.withValues(alpha: 0.2),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    'Archived',
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: AppColors.warning,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primary.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Text(
+                                    'Qty: ${prog['program_quantity'] ?? ''}',
+                                    style: AppTextStyles.labelSmall.copyWith(
+                                      color: AppColors.primary,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
-            ],
-          ),
+                      ),
+                      if (!hideButtons)
+                        Row(
+                          children: [
+                            _buildActionButton(
+                              Icons.restore,
+                              AppColors.success,
+                              () => _showRestoreConfirmationDialog(
+                                context,
+                                () => _restoreProgram(prog['id']),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildActionButton(
+                              Icons.share,
+                              AppColors.primary,
+                              () => _shareProgramCard(cardKey, index),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: AppColors.textLight, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        prog['program_date'] ?? '',
+                        style: AppTextStyles.bodySmall.copyWith(
+                          color: AppColors.textLight,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildTwoColumnGrid([
+                    ['SIZE', prog['size'] ?? ''],
+                    ['CODE', prog['material_code'] ?? ''],
+                    ['OD', '${prog['outer_length'] ?? ''}X${prog['outer_breadth'] ?? ''}X${prog['outer_depth'] ?? ''}'],
+                    ['GSM', prog['gsm']?.toString() ?? ''],
+                    ['COLOUR', prog['color'] ?? ''],
+                    ['WEIGHT', prog['weight']?.toString() ?? ''],
+                  ]),
+                  if ((prog['program_notes'] ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: AppColors.primary.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.primary.withValues(alpha: 0.1)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(Icons.note, size: 16, color: AppColors.primary),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Notes',
+                                style: AppTextStyles.labelSmall.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            prog['program_notes'],
+                            style: AppTextStyles.bodyMedium,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                  if (partitions.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      'Partitions',
+                      style: AppTextStyles.titleSmall.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    ...((partitions as List).asMap().entries.map((entry) {
+                      final pidx = entry.key + 1;
+                      final part = entry.value;
+                      return _buildPartitionCard(pidx, part);
+                    })),
+                  ],
+                ],
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildActionButton(IconData icon, Color color, VoidCallback onPressed) {
+    return Material(
+      color: color.withValues(alpha: 0.1),
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(icon, color: color, size: 20),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTwoColumnGrid(List<List<String>> items) {
+    return GridView.count(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      crossAxisCount: 2,
+      childAspectRatio: 3.0,
+      crossAxisSpacing: 16,
+      mainAxisSpacing: 12,
+      children: items.map((item) => _buildDetailItem(item[0], item[1])).toList(),
+    );
+  }
+
+  Widget _buildDetailItem(String title, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: AppTextStyles.labelSmall.copyWith(
+            color: AppColors.primary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value.isEmpty ? '-' : value,
+          style: AppTextStyles.bodyMedium.copyWith(
+            fontWeight: FontWeight.w500,
+          ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPartitionCard(int index, dynamic part) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppColors.background,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Partition $index',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.primary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  part['partition_type']?.toString() ?? '',
+                  style: AppTextStyles.labelSmall.copyWith(
+                    color: AppColors.success,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          _buildTwoColumnGrid([
+            ['SIZE', part['partition_size']?.toString() ?? ''],
+            ['OD', part['partition_od']?.toString() ?? ''],
+            ['DECKLE CUT', part['deckle_cut']?.toString() ?? ''],
+            ['LENGTH CUT', part['length_cut']?.toString() ?? ''],
+            ['PLY', part['ply_no']?.toString() ?? ''],
+            ['WEIGHT', part['partition_weight']?.toString() ?? ''],
+          ]),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _showRestoreConfirmationDialog(
+    BuildContext context,
+    VoidCallback onRestore,
+  ) async {
+    await showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppColors.surface,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.success.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.restore, color: AppColors.success, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Restore Program',
+                style: AppTextStyles.titleMedium.copyWith(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Text(
+            'Are you sure you want to restore this program? It will be moved back to your active programs.',
+            style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textSecondary),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'Cancel',
+                style: AppTextStyles.labelLarge.copyWith(color: AppColors.textSecondary),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                onRestore();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.success,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: const Text('Restore'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
