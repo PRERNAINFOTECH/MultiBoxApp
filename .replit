@@ -1,4 +1,4 @@
-modules = ["web", "cpp-clang14", "swift-5.8", "dart-3.8"]
+modules = ["web", "cpp-clang14", "swift-5.8", "dart-3.8", "python-3.11"]
 [agent]
 expertMode = true
 
@@ -22,25 +22,21 @@ args = "Flutter Web Dev Server"
 name = "Flutter Web Dev Server"
 author = "agent"
 
-[[workflows.workflow.tasks]]
-task = "shell.exec"
-args = "flutter run -d web-server --web-hostname=0.0.0.0 --web-port=5000 --dart-define=BACKEND_URL=$BACKEND_URL --dart-define=RAZORPAY_KEY_ID=$RAZORPAY_KEY_ID"
-waitForPort = 5000
-
 [workflows.workflow.metadata]
 outputType = "webview"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "flutter build web --release --pwa-strategy=none && python3 -m http.server 5000 --directory build/web --bind 0.0.0.0"
+waitForPort = 5000
 
 [[ports]]
 localPort = 5000
 externalPort = 80
 
 [[ports]]
-localPort = 39943
+localPort = 41437
 externalPort = 3000
-
-[[ports]]
-localPort = 42203
-externalPort = 3001
 
 [deployment]
 deploymentTarget = "static"
