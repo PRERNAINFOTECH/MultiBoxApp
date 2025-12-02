@@ -117,8 +117,12 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   void initState() {
     super.initState();
     RazorpayService.initialize();
-    _loadUserData();
-    _checkSubscriptionStatus();
+    _initializeScreen();
+  }
+
+  Future<void> _initializeScreen() async {
+    await _loadUserData();
+    await _checkSubscriptionStatus();
   }
 
   Future<void> _loadUserData() async {
