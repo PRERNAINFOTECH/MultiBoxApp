@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import '../widgets/scroll_to_top_wrapper.dart';
-import '../widgets/side_drawer.dart';
-import '../screens/products_archive_details.dart';
-import '../widgets/custom_app_bar.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../config.dart';
+import '../config.dart';
+import '../theme/app_theme.dart';
+import '../widgets/animated_widgets.dart';
+import '../widgets/app_drawer.dart';
+import '../widgets/app_bar_widget.dart';
+import '../screens/products_archive_details.dart';
 
 class ProductsArchiveScreen extends StatefulWidget {
   const ProductsArchiveScreen({super.key});
 
   @override
-  State<ProductsArchiveScreen> createState() => _ProductsScreenState();
+  State<ProductsArchiveScreen> createState() => _ProductsArchiveScreenState();
 }
 
-class _ProductsScreenState extends State<ProductsArchiveScreen> {
+class _ProductsArchiveScreenState extends State<ProductsArchiveScreen> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _searchController = TextEditingController();
 
@@ -53,7 +54,6 @@ class _ProductsScreenState extends State<ProductsArchiveScreen> {
         _loading = false;
       });
     } else {
-      // Optionally handle error
       setState(() => _loading = false);
     }
   }
@@ -73,82 +73,245 @@ class _ProductsScreenState extends State<ProductsArchiveScreen> {
     super.dispose();
   }
 
-  Widget _buildProductCard(BuildContext context, String name) {
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => ProductsArchiveDetailScreen(productName: name),
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      drawer: const AppDrawer(),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const GradientAppBar(title: 'Archived Products'),
+          Expanded(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
+                    ),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchArchivedProducts,
+                    color: AppColors.primary,
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: FadeInWidget(
+                              child: _buildSearchBar(),
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: FadeInWidget(
+                              delay: const Duration(milliseconds: 100),
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.warning.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: AppColors.warning.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.archive_outlined,
+                                      color: AppColors.warning,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        'These products have been archived. Tap to view details or restore.',
+                                        style: AppTextStyles.bodySmall.copyWith(
+                                          color: AppColors.warning,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 16),
+                        ),
+                        if (filteredProductNames.isEmpty)
+                          SliverFillRemaining(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.archive_outlined,
+                                    size: 64,
+                                    color: AppColors.textLight,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No archived products',
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Products you archive will appear here',
+                                    style: AppTextStyles.bodyMedium.copyWith(
+                                      color: AppColors.textLight,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  return SlideInWidget(
+                                    delay: Duration(milliseconds: 150 + (index * 50)),
+                                    child: _buildProductCard(
+                                      context,
+                                      filteredProductNames[index],
+                                      index,
+                                    ),
+                                  );
+                                },
+                                childCount: filteredProductNames.length,
+                              ),
+                            ),
+                          ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 24),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
-        );
-      },
-      child: Card(
-        color: const Color(0xFFFFFFFF),
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        elevation: 3,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Text(
-            name,
-            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSearchBar() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.small,
+      ),
+      child: TextField(
+        controller: _searchController,
+        onChanged: _filterProducts,
+        style: AppTextStyles.bodyMedium,
+        decoration: InputDecoration(
+          hintText: 'Search archived products...',
+          hintStyle: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
+          prefixIcon: Icon(Icons.search, color: AppColors.textLight),
+          suffixIcon: _searchController.text.isNotEmpty
+              ? IconButton(
+                  icon: Icon(Icons.clear, color: AppColors.textLight),
+                  onPressed: () {
+                    _searchController.clear();
+                    _filterProducts('');
+                  },
+                )
+              : null,
+          border: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      drawer: const SideDrawer(),
-      backgroundColor: const Color(0xFFF8F9FA),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text("Archive Products"),
-        actions: const [
-          AppBarMenu(),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ScrollToTopWrapper(
-              scrollController: _scrollController,
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-                    child: SizedBox(
-                      height: 45,
-                      child: TextField(
-                        controller: _searchController,
-                        decoration: InputDecoration(
-                          hintText: "Search Archived Products...",
-                          prefixIcon: const Icon(Icons.search),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          filled: true,
-                          fillColor: Colors.white,
-                          contentPadding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                        ),
-                        onChanged: _filterProducts,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.builder(
-                      controller: _scrollController,
-                      itemCount: filteredProductNames.length,
-                      itemBuilder: (context, index) {
-                        return _buildProductCard(context, filteredProductNames[index]);
-                      },
-                    ),
-                  ),
-                ],
+  Widget _buildProductCard(BuildContext context, String name, int index) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Material(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(16),
+        elevation: 2,
+        shadowColor: Colors.black.withValues(alpha: 0.1),
+        child: InkWell(
+          onTap: () async {
+            final result = await Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => ProductsArchiveDetailScreen(productName: name),
               ),
+            );
+            if (result == true) {
+              _fetchArchivedProducts();
+            }
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.warning.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Icon(
+                      Icons.archive,
+                      color: AppColors.warning,
+                      size: 24,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        name,
+                        style: AppTextStyles.titleMedium.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 4),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppColors.warning.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          'Archived',
+                          style: AppTextStyles.labelSmall.copyWith(
+                            color: AppColors.warning,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.chevron_right,
+                  color: AppColors.textLight,
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
     );
   }
 }
