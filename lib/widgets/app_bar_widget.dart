@@ -426,8 +426,8 @@ class _AppBarMenuButtonState extends State<AppBarMenuButton> {
             height: 36,
             decoration: BoxDecoration(
               color: isDestructive
-                  ? AppColors.error.withOpacity(0.1)
-                  : AppColors.primary.withOpacity(0.08),
+                  ? AppColors.error.withValues(alpha: 0.1)
+                  : AppColors.primary.withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -445,6 +445,81 @@ class _AppBarMenuButtonState extends State<AppBarMenuButton> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class GradientAppBar extends StatelessWidget {
+  final String title;
+  final List<Widget>? actions;
+  final bool showBackButton;
+  final VoidCallback? onBackPressed;
+  
+  const GradientAppBar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.showBackButton = false,
+    this.onBackPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: AppColors.headerGradient,
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              if (showBackButton)
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(Icons.arrow_back, color: Colors.white, size: 20),
+                  ),
+                  onPressed: onBackPressed ?? () => Navigator.of(context).pop(),
+                )
+              else
+                Builder(
+                  builder: (context) => IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.15),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(Icons.menu, color: Colors.white, size: 20),
+                    ),
+                    onPressed: () => Scaffold.of(context).openDrawer(),
+                  ),
+                ),
+              Expanded(
+                child: Center(
+                  child: Text(
+                    title,
+                    style: AppTextStyles.headlineSmall.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+              if (actions != null)
+                ...actions!
+              else
+                AppBarMenuButton(isDark: true),
+            ],
+          ),
+        ),
       ),
     );
   }

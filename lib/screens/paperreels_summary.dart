@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../../config.dart';
-import '../widgets/scroll_to_top_wrapper.dart';
-import '../widgets/side_drawer.dart';
-import '../widgets/custom_app_bar.dart';
+import '../config.dart';
+import '../theme/app_theme.dart';
+import '../widgets/animated_widgets.dart';
+import '../widgets/app_drawer.dart';
+import '../widgets/app_bar_widget.dart';
 
 class PaperReelsSummaryScreen extends StatefulWidget {
   const PaperReelsSummaryScreen({super.key});
@@ -31,27 +32,28 @@ class _PaperReelsSummaryScreenState extends State<PaperReelsSummaryScreen> {
     final prefs = await SharedPreferences.getInstance();
     final authToken = prefs.getString('auth_token');
 
-    final response = await http.get(
-      Uri.parse('$baseUrl/corrugation/paper-reels/summary/'),
-      headers: {
-        'Accept': 'application/json',
-        'Authorization': 'Token $authToken',
-      },
-    );
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/corrugation/paper-reels/summary/'),
+        headers: {
+          'Accept': 'application/json',
+          'Authorization': 'Token $authToken',
+        },
+      );
 
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      setState(() {
-        totalReels = data['total_reels'];
-        totalWeight = (data['total_weight'] as num).toDouble();
-        reels = List<Map<String, dynamic>>.from(data['paper_reel_summary']);
-        _loading = false;
-      });
-    } else {
-      setState(() {
-        _loading = false;
-      });
-      // Handle error if needed
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        setState(() {
+          totalReels = data['total_reels'];
+          totalWeight = (data['total_weight'] as num).toDouble();
+          reels = List<Map<String, dynamic>>.from(data['paper_reel_summary']);
+          _loading = false;
+        });
+      } else {
+        setState(() => _loading = false);
+      }
+    } catch (e) {
+      setState(() => _loading = false);
     }
   }
 
@@ -64,81 +66,335 @@ class _PaperReelsSummaryScreenState extends State<PaperReelsSummaryScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const SideDrawer(),
-      appBar: AppBar(
-        title: const Text("Paper Reels Summary"),
-        backgroundColor: Colors.white,
-        actions: const [
-          AppBarMenu(),
-        ],
-      ),
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ScrollToTopWrapper(
-              scrollController: _scrollController,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  children: [
-                    // Summary section
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        'Total Un-Used Reels: $totalReels\nTotal Weight: ${totalWeight.toStringAsFixed(2)}',
-                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
+      drawer: const AppDrawer(),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const GradientAppBar(title: 'Paper Reels Summary'),
+          Expanded(
+            child: _loading
+                ? const Center(
+                    child: CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(AppColors.primary),
                     ),
-                    const SizedBox(height: 12),
-
-                    // Table Header
-                    Container(
-                      color: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                      child: Row(
-                        children: const [
-                          Expanded(flex: 2, child: Text("Size", style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(child: Text("GSM", style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(child: Text("BF", style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(flex: 2, child: Text("Total Weight", style: TextStyle(fontWeight: FontWeight.bold))),
-                          Expanded(child: Text("Total Reels", style: TextStyle(fontWeight: FontWeight.bold))),
-                        ],
-                      ),
-                    ),
-                    const Divider(height: 0, thickness: 1),
-
-                    // Table rows
-                    Expanded(
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        itemCount: reels.length,
-                        itemBuilder: (context, index) {
-                          final reel = reels[index];
-                          return Container(
-                            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
-                            decoration: const BoxDecoration(
-                              color: Colors.white,
-                              border: Border(
-                                bottom: BorderSide(color: Colors.white),
-                              ),
-                            ),
-                            child: Row(
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchPaperReelSummary,
+                    color: AppColors.primary,
+                    child: CustomScrollView(
+                      controller: _scrollController,
+                      slivers: [
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Column(
                               children: [
-                                Expanded(flex: 2, child: Text("${reel["size"]}")),
-                                Expanded(child: Text("${reel["gsm"]}")),
-                                Expanded(child: Text("${reel["bf"]}")),
-                                Expanded(flex: 2, child: Text("${reel["total_weight"]}")),
-                                Expanded(child: Text("${reel["total_reels"]}")),
+                                FadeInWidget(
+                                  delay: const Duration(milliseconds: 100),
+                                  child: _buildSummaryCards(),
+                                ),
+                                const SizedBox(height: 24),
+                                FadeInWidget(
+                                  delay: const Duration(milliseconds: 200),
+                                  child: _buildTableHeader(),
+                                ),
                               ],
                             ),
-                          );
-                        },
-                      ),
+                          ),
+                        ),
+                        if (reels.isEmpty)
+                          SliverFillRemaining(
+                            child: Center(
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.inventory_2_outlined,
+                                    size: 64,
+                                    color: AppColors.textLight,
+                                  ),
+                                  const SizedBox(height: 16),
+                                  Text(
+                                    'No summary data available',
+                                    style: AppTextStyles.bodyLarge.copyWith(
+                                      color: AppColors.textSecondary,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          )
+                        else
+                          SliverPadding(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            sliver: SliverList(
+                              delegate: SliverChildBuilderDelegate(
+                                (context, index) {
+                                  final reel = reels[index];
+                                  return SlideInWidget(
+                                    delay: Duration(milliseconds: 300 + (index * 50)),
+                                    child: _buildReelRow(reel, index),
+                                  );
+                                },
+                                childCount: reels.length,
+                              ),
+                            ),
+                          ),
+                        const SliverToBoxAdapter(
+                          child: SizedBox(height: 24),
+                        ),
+                      ],
                     ),
-                  ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSummaryCards() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.primary, AppColors.primaryLight],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.inventory_2,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Total Reels',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '$totalReels',
+                  style: AppTextStyles.displaySmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [AppColors.accent, AppColors.accentLight],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.accent.withValues(alpha: 0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: const Icon(
+                    Icons.scale,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  'Total Weight',
+                  style: AppTextStyles.bodySmall.copyWith(
+                    color: Colors.white70,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${totalWeight.toStringAsFixed(2)} kg',
+                  style: AppTextStyles.displaySmall.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTableHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Size',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
               ),
             ),
+          ),
+          Expanded(
+            child: Text(
+              'GSM',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'BF',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              'Weight',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              'Reels',
+              style: AppTextStyles.labelLarge.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w600,
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildReelRow(Map<String, dynamic> reel, int index) {
+    final isEven = index % 2 == 0;
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      decoration: BoxDecoration(
+        color: isEven ? AppColors.surface : AppColors.background,
+        border: Border(
+          bottom: BorderSide(
+            color: AppColors.divider,
+            width: 1,
+          ),
+        ),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 2,
+            child: Text(
+              '${reel["size"]}',
+              style: AppTextStyles.bodyMedium.copyWith(
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              '${reel["gsm"]}',
+              style: AppTextStyles.bodyMedium,
+            ),
+          ),
+          Expanded(
+            child: Text(
+              '${reel["bf"]}',
+              style: AppTextStyles.bodyMedium,
+            ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Text(
+              '${reel["total_weight"]}',
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: AppColors.primary,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: AppColors.primaryLight.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: Text(
+                '${reel["total_reels"]}',
+                style: AppTextStyles.labelMedium.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
