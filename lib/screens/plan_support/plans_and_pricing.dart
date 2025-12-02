@@ -3,8 +3,10 @@ import 'package:razorpay_flutter/razorpay_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import '../../widgets/scroll_to_top_wrapper.dart';
-import '../../widgets/side_drawer.dart';
-import '../../widgets/custom_app_bar.dart';
+import '../../widgets/app_drawer.dart';
+import '../../widgets/app_bar_widget.dart';
+import '../../widgets/animated_widgets.dart';
+import '../../theme/app_theme.dart';
 import '../../services/razorpay_service.dart';
 import '../../services/subscription_service.dart';
 import '../../config.dart' as config;
@@ -29,8 +31,12 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   final planData = {
     'monthly': [
       {
+        'planId': 1,
         'title': 'STANDARD',
-        'price': '₹798',
+        'displayPrice': '₹798',
+        'amountPaise': 79800,
+        'icon': Icons.inventory_2_outlined,
+        'color': AppColors.info,
         'features': [
           "Stock Management without History",
           "Single Reel Addition",
@@ -41,8 +47,13 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
         ]
       },
       {
+        'planId': 2,
         'title': 'ENTERPRISE',
-        'price': '₹1098',
+        'displayPrice': '₹1098',
+        'amountPaise': 109800,
+        'icon': Icons.rocket_launch_outlined,
+        'color': AppColors.primary,
+        'popular': true,
         'features': [
           "Stock Management with History",
           "Bulk Reel Addition",
@@ -61,8 +72,12 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
     ],
     'yearly': [
       {
+        'planId': 3,
         'title': 'STANDARD',
-        'price': '₹7980',
+        'displayPrice': '₹7980',
+        'amountPaise': 798000,
+        'icon': Icons.inventory_2_outlined,
+        'color': AppColors.info,
         'features': [
           "Stock Management without History",
           "Single Reel Addition",
@@ -73,8 +88,13 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
         ]
       },
       {
+        'planId': 4,
         'title': 'ENTERPRISE',
-        'price': '₹10980',
+        'displayPrice': '₹10980',
+        'amountPaise': 1098000,
+        'icon': Icons.rocket_launch_outlined,
+        'color': AppColors.primary,
+        'popular': true,
         'features': [
           "Stock Management with History",
           "Bulk Reel Addition",
@@ -112,9 +132,9 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
 
   Future<void> _checkSubscriptionStatus() async {
     if (userToken == null) return;
-    
+
     setState(() => isLoading = true);
-    
+
     try {
       final status = await RazorpayService.getSubscriptionStatus(token: userToken!);
       if (status != null) {
@@ -139,7 +159,6 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
     setState(() => isLoading = true);
 
     try {
-      // Create order
       final orderData = await RazorpayService.createOrder(
         planId: plan['id'],
         amount: plan['price'],
@@ -151,7 +170,6 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
         return;
       }
 
-      // Open Razorpay payment
       RazorpayService.openPayment(
         keyId: config.razorpayKeyId,
         orderId: orderData['order_id'],
@@ -163,11 +181,9 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
         options: {},
       );
 
-      // Listen for payment success
       RazorpayService.razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, (PaymentSuccessResponse response) async {
         await _verifyPayment(response);
       });
-
     } catch (e) {
       Fluttertoast.showToast(msg: 'Payment failed: $e');
     } finally {
@@ -196,174 +212,376 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   }
 
   @override
+  void dispose() {
+    _scrollController.dispose();
+    RazorpayService.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
-      drawer: const SideDrawer(),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        title: const Text("Tenant Plans"),
-        actions: const [AppBarMenu()],
-      ),
-      backgroundColor: const Color(0xFFF8F9FA),
-      body: ScrollToTopWrapper(
-        scrollController: _scrollController,
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                "Tenant Plans",
-                style: TextStyle(fontSize: 24, fontWeight: FontWeight.w600, color: Colors.black87),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                "Choose the plans based on your needs and our features.",
-                style: TextStyle(fontSize: 14, color: Colors.grey),
-              ),
-              const SizedBox(height: 16),
-              ToggleButtons(
-                isSelected: [isMonthly, !isMonthly],
-                onPressed: (index) => setState(() => isMonthly = index == 0),
-                borderRadius: BorderRadius.circular(8),
-                selectedColor: Colors.white,
-                fillColor: const Color(0xFF4A68F2),
-                color: const Color(0xFF4A68F2),
-                children: const [
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text("Monthly"),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    child: Text("Yearly"),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 20),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  bool isMobile = constraints.maxWidth < 600;
-                  var plans = isMonthly ? planData['monthly']! : planData['yearly']!;
-                  return Flex(
-                    direction: isMobile ? Axis.vertical : Axis.horizontal,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      for (var plan in plans)
-                        Padding(
-                          padding: const EdgeInsets.all(10),
-                          child: SizedBox(
-                            width: isMobile ? double.infinity : 320,
-                            child: _buildPlanCard(
-                              title: plan['title'] as String,
-                              price: plan['price'] as String,
-                              isMonthly: isMonthly,
-                              features: List<String>.from(plan['features'] as List),
+      drawer: const AppDrawer(),
+      backgroundColor: AppColors.background,
+      body: Column(
+        children: [
+          const GradientAppBar(title: 'Plans & Pricing'),
+          Expanded(
+            child: ScrollToTopWrapper(
+              scrollController: _scrollController,
+              child: RefreshIndicator(
+                onRefresh: _checkSubscriptionStatus,
+                color: AppColors.primary,
+                child: CustomScrollView(
+                  controller: _scrollController,
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            FadeInWidget(
+                              child: _buildHeader(),
                             ),
-                          ),
+                            const SizedBox(height: 24),
+                            FadeInWidget(
+                              delay: const Duration(milliseconds: 100),
+                              child: _buildToggle(),
+                            ),
+                            const SizedBox(height: 32),
+                            _buildPlansSection(),
+                            const SizedBox(height: 40),
+                          ],
                         ),
-                    ],
-                  );
-                },
+                      ),
+                    ),
+                  ],
+                ),
               ),
-              const SizedBox(height: 40),
-            ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: AppColors.primary.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Icon(Icons.workspace_premium, color: AppColors.primary, size: 48),
+        ),
+        const SizedBox(height: 16),
+        Text(
+          'Choose Your Plan',
+          style: AppTextStyles.displaySmall.copyWith(fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Select the plan that best fits your business needs\nand unlock powerful features',
+          style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight, height: 1.5),
+          textAlign: TextAlign.center,
+        ),
+        if (hasActiveSubscription) ...[
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            decoration: BoxDecoration(
+              color: AppColors.success.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: AppColors.success.withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.check_circle, color: AppColors.success, size: 20),
+                const SizedBox(width: 8),
+                Text(
+                  'You have an active subscription',
+                  style: AppTextStyles.bodyMedium.copyWith(color: AppColors.success, fontWeight: FontWeight.w600),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildToggle() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: AppShadows.small,
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildToggleButton('Monthly', isMonthly, () => setState(() => isMonthly = true)),
+          _buildToggleButton('Yearly', !isMonthly, () => setState(() => isMonthly = false), showBadge: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleButton(String text, bool isSelected, VoidCallback onTap, {bool showBadge = false}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: isSelected ? AppColors.primaryGradient : null,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              text,
+              style: AppTextStyles.bodyMedium.copyWith(
+                color: isSelected ? Colors.white : AppColors.textLight,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+            if (showBadge && !isMonthly) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white.withValues(alpha: 0.2) : AppColors.success,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '2 Free',
+                  style: AppTextStyles.caption.copyWith(
+                    color: isSelected ? Colors.white : Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                  ),
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildPlanCard({
-    required String title,
-    required String price,
-    required List<String> features,
-    required bool isMonthly,
-  }) {
+  Widget _buildPlansSection() {
+    var plans = isMonthly ? planData['monthly']! : planData['yearly']!;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        bool isMobile = constraints.maxWidth < 600;
+        return isMobile
+            ? Column(
+                children: [
+                  for (int i = 0; i < plans.length; i++)
+                    SlideInWidget(
+                      delay: Duration(milliseconds: 200 + (i * 100)),
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 20),
+                        child: _buildPlanCard(plans[i], i),
+                      ),
+                    ),
+                ],
+              )
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (int i = 0; i < plans.length; i++)
+                    SlideInWidget(
+                      delay: Duration(milliseconds: 200 + (i * 100)),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: SizedBox(
+                          width: 340,
+                          child: _buildPlanCard(plans[i], i),
+                        ),
+                      ),
+                    ),
+                ],
+              );
+      },
+    );
+  }
+
+  Widget _buildPlanCard(Map<String, dynamic> plan, int index) {
+    final bool isPopular = plan['popular'] == true;
+    final Color planColor = plan['color'] as Color? ?? AppColors.primary;
+    final IconData planIcon = plan['icon'] as IconData? ?? Icons.star;
+
     return Container(
-      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2)),
-        ],
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: isPopular ? AppShadows.medium : AppShadows.small,
+        border: isPopular ? Border.all(color: planColor, width: 2) : null,
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: const Color(0xFF4A68F2),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            price,
-            style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold),
-          ),
-          Text(
-            isMonthly ? "/month" : "/year",
-            style: const TextStyle(fontSize: 16, color: Colors.grey),
-          ),
-          const SizedBox(height: 16),
-          ...features.map(
-            (feature) => Padding(
-              padding: const EdgeInsets.symmetric(vertical: 4),
+          if (isPopular)
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              decoration: BoxDecoration(
+                gradient: AppColors.primaryGradient,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+              ),
               child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.check, size: 20, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Expanded(child: Text(feature)),
+                  Icon(Icons.star, color: Colors.white, size: 16),
+                  const SizedBox(width: 6),
+                  Text(
+                    'MOST POPULAR',
+                    style: AppTextStyles.caption.copyWith(color: Colors.white, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  ),
                 ],
               ),
             ),
-          ),
-          const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: hasActiveSubscription ? null : () => _handlePayment({
-                'id': 1, // This should be the actual plan ID from backend
-                'name': title,
-                'price': double.parse(price.replaceAll('₹', '').replaceAll(',', '')),
-              }),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: hasActiveSubscription 
-                    ? const Color(0xFFCDD9FD) 
-                    : const Color(0xFF4A68F2),
-                foregroundColor: hasActiveSubscription 
-                    ? const Color(0xFF4A68F2) 
-                    : Colors.white,
-              ),
-              child: isLoading 
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: planColor.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                    )
-                  : Text(hasActiveSubscription ? "You Have Active Plan" : "Purchase Plan"),
+                      child: Icon(planIcon, color: planColor, size: 24),
+                    ),
+                    const SizedBox(width: 12),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          plan['title'] as String,
+                          style: AppTextStyles.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          isMonthly ? 'Monthly billing' : 'Annual billing',
+                          style: AppTextStyles.caption.copyWith(color: AppColors.textLight),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      plan['displayPrice'] as String,
+                      style: AppTextStyles.displaySmall.copyWith(fontWeight: FontWeight.bold, color: planColor),
+                    ),
+                    const SizedBox(width: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Text(
+                        isMonthly ? '/month' : '/year',
+                        style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 24),
+                Container(height: 1, color: AppColors.border),
+                const SizedBox(height: 20),
+                Text(
+                  'Features included:',
+                  style: AppTextStyles.bodySmall.copyWith(color: AppColors.textLight, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 12),
+                ...(plan['features'] as List<String>).map((feature) => Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(2),
+                            decoration: BoxDecoration(
+                              color: AppColors.success,
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.check, size: 12, color: Colors.white),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              feature,
+                              style: AppTextStyles.bodyMedium,
+                            ),
+                          ),
+                        ],
+                      ),
+                    )),
+                const SizedBox(height: 24),
+                SizedBox(
+                  width: double.infinity,
+                  child: isPopular
+                      ? GradientButton(
+                          text: hasActiveSubscription ? 'Active Plan' : 'Get Started',
+                          onPressed: hasActiveSubscription
+                              ? null
+                              : () => _handlePayment({
+                                    'id': plan['planId'],
+                                    'name': plan['title'],
+                                    'price': plan['amountPaise'],
+                                  }),
+                          icon: hasActiveSubscription ? Icons.check : Icons.arrow_forward,
+                          isLoading: isLoading,
+                        )
+                      : OutlinedButton(
+                          onPressed: hasActiveSubscription
+                              ? null
+                              : () => _handlePayment({
+                                    'id': plan['planId'],
+                                    'name': plan['title'],
+                                    'price': plan['amountPaise'],
+                                  }),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(color: hasActiveSubscription ? AppColors.textLight : planColor),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Text(
+                                hasActiveSubscription ? 'Active Plan' : 'Get Started',
+                                style: AppTextStyles.bodyMedium.copyWith(
+                                  color: hasActiveSubscription ? AppColors.textLight : planColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              if (!hasActiveSubscription) ...[
+                                const SizedBox(width: 8),
+                                Icon(Icons.arrow_forward, size: 18, color: planColor),
+                              ],
+                            ],
+                          ),
+                        ),
+                ),
+              ],
             ),
           ),
         ],
       ),
     );
-  }
-
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    RazorpayService.dispose();
-    super.dispose();
   }
 }
