@@ -40,5 +40,5 @@ externalPort = 3000
 
 [deployment]
 deploymentTarget = "static"
-build = ["flutter", "build", "web"]
+build = ["flutter", "build", "web", "--release", "--pwa-strategy=none"]
 publicDir = "build/web"
