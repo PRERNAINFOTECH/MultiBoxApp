@@ -1,2 +1,2 @@
-const String baseUrl = "http://localhost:8000";
-const String razorpayKeyId = "YOUR_RAZORPAY_KEY_ID"; // Replace with your actual Razorpay Key ID
+const String baseUrl = String.fromEnvironment('BACKEND_URL', defaultValue: "http://localhost:8000");
+const String razorpayKeyId = String.fromEnvironment('RAZORPAY_KEY_ID', defaultValue: "YOUR_RAZORPAY_KEY_ID");
