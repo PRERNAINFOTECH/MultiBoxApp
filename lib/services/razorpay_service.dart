@@ -49,11 +49,14 @@ class RazorpayService {
         }),
       );
 
+      final Map<String, dynamic> body = jsonDecode(response.body);
+
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        return body;
       } else {
-        debugPrint('Error creating order: ${response.body}');
-        return null;
+        debugPrint('Error creating order: $body');
+        // Return the error payload so the caller can show a useful message.
+        return body;
       }
     } catch (e) {
       debugPrint('Exception creating order: $e');
@@ -88,7 +91,12 @@ class RazorpayService {
     }
   }
 
-  static Future<Map<String, dynamic>?> getPlans({required String token}) async {
+  /// Fetch available billing plans for the authenticated user.
+  ///
+  /// The backend returns a JSON array of plan objects, so the return type here
+  /// is `List<dynamic>?`. We keep it dynamic so that the caller can transform
+  /// it into the UI-friendly structure it needs.
+  static Future<List<dynamic>?> getPlans({required String token}) async {
     try {
       final response = await http.get(
         Uri.parse('$_baseUrl/billing/plans/'),
@@ -98,8 +106,16 @@ class RazorpayService {
       );
 
       if (response.statusCode == 200) {
-        return jsonDecode(response.body);
+        final decoded = jsonDecode(response.body);
+        if (decoded is List) {
+          return decoded;
+        } else {
+          debugPrint('Unexpected /billing/plans/ response shape: ${decoded.runtimeType}');
+          return null;
+        }
       }
+      debugPrint(
+          'Failed to load plans. Status: ${response.statusCode}, Body: ${response.body}');
       return null;
     } catch (e) {
       debugPrint('Exception getting plans: $e');
