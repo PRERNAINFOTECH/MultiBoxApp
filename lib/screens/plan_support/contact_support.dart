@@ -299,7 +299,7 @@ class _ContactSupportState extends State<ContactSupportScreen> {
     final subject = _subjectController.text.trim();
     final message = _messageController.text.trim();
 
-    if (name.isEmpty || email.isEmpty || message.isEmpty) {
+    if (name.isEmpty || email.isEmpty || subject.isEmpty || message.isEmpty) {
       _showSnackBar('Please fill in all required fields', isError: true);
       return;
     }
@@ -323,6 +323,7 @@ class _ContactSupportState extends State<ContactSupportScreen> {
   }
 
   void _showSnackBar(String message, {bool isError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
