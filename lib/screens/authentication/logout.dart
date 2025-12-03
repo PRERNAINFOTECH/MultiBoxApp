@@ -57,6 +57,7 @@ class _LogoutScreenState extends State<LogoutScreen>
       final authToken = prefs.getString('auth_token');
 
       if (authToken == null || authToken.isEmpty) {
+        if (!mounted) return;
         _showInfoSnackBar("No active session.");
         _redirectToLogin();
         return;
@@ -73,6 +74,7 @@ class _LogoutScreenState extends State<LogoutScreen>
       await prefs.remove('pending_email');
       await prefs.remove('pending_session_token');
 
+      if (!mounted) return;
       if (response.statusCode == 200 || response.statusCode == 401) {
         _showSuccessSnackBar("Logged out successfully");
         _redirectToLogin();
@@ -82,6 +84,7 @@ class _LogoutScreenState extends State<LogoutScreen>
         _showErrorSnackBar(error is List ? error.first.toString() : error.toString());
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorSnackBar("Logout failed. Please try again.");
     } finally {
       if (mounted) setState(() => isLoggingOut = false);
@@ -89,6 +92,7 @@ class _LogoutScreenState extends State<LogoutScreen>
   }
 
   void _redirectToLogin() {
+    if (!mounted) return;
     Navigator.pushAndRemoveUntil(
       context,
       PageRouteBuilder(
@@ -112,7 +116,7 @@ class _LogoutScreenState extends State<LogoutScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check, color: Colors.white, size: 16),
@@ -138,7 +142,7 @@ class _LogoutScreenState extends State<LogoutScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline, color: Colors.white, size: 16),
@@ -164,7 +168,7 @@ class _LogoutScreenState extends State<LogoutScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.info_outline, color: Colors.white, size: 16),
@@ -224,7 +228,7 @@ class _LogoutScreenState extends State<LogoutScreen>
       width: 120,
       height: 120,
       decoration: BoxDecoration(
-        color: AppColors.error.withOpacity(0.1),
+        color: AppColors.error.withValues(alpha: 0.1),
         shape: BoxShape.circle,
       ),
       child: Center(
@@ -237,13 +241,13 @@ class _LogoutScreenState extends State<LogoutScreen>
               end: Alignment.bottomRight,
               colors: [
                 AppColors.error,
-                AppColors.error.withOpacity(0.8),
+                AppColors.error.withValues(alpha: 0.8),
               ],
             ),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.error.withOpacity(0.3),
+                color: AppColors.error.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),

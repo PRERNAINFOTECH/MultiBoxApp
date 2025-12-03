@@ -80,6 +80,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
 
       final data = json.decode(response.body);
 
+      if (!mounted) return;
       if (response.statusCode == 200) {
         _showSuccessSnackBar("Password reset successful!");
         await Future.delayed(const Duration(milliseconds: 800));
@@ -101,13 +102,17 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
         _showErrorSnackBar(error.toString());
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorSnackBar("Failed to reset password. Try again.");
     } finally {
-      setState(() => isSubmitting = false);
+      if (mounted) {
+        setState(() => isSubmitting = false);
+      }
     }
   }
 
   void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -115,7 +120,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check, color: Colors.white, size: 16),
@@ -133,6 +138,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
   }
 
   void _showErrorSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -140,7 +146,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline, color: Colors.white, size: 16),
@@ -214,7 +220,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -241,7 +247,7 @@ class _SetPasswordScreenState extends State<SetPasswordScreen>
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.1),
+            color: AppColors.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(

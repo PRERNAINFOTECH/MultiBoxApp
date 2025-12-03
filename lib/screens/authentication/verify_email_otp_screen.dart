@@ -131,6 +131,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
     final email = emailController.text.trim();
 
     if (email.isEmpty || sessionToken == null || sessionToken!.isEmpty) {
+      if (!mounted) return;
       _showErrorSnackBar("Missing email or session information.");
       return;
     }
@@ -146,9 +147,11 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
 
       final data = json.decode(response.body);
 
+      if (!mounted) return;
       if (response.statusCode == 200) {
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('pending_email', email);
+        if (!mounted) return;
         _showSuccessSnackBar("Verification code resent successfully!");
       } else if (response.statusCode == 409) {
         _showInfoSnackBar("Verification is not pending. Already verified?");
@@ -159,11 +162,13 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
         _showErrorSnackBar(error is List ? error.first.toString() : error.toString());
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorSnackBar("Error resending code. Please try again.");
     }
   }
 
   void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -171,7 +176,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check, color: Colors.white, size: 16),
@@ -189,6 +194,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
   }
 
   void _showErrorSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -196,7 +202,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline, color: Colors.white, size: 16),
@@ -214,6 +220,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
   }
 
   void _showInfoSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -221,7 +228,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.info_outline, color: Colors.white, size: 16),
@@ -239,6 +246,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
   }
 
   void _showWarningSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -246,7 +254,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.warning_amber_outlined, color: Colors.white, size: 16),
@@ -320,7 +328,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.accent.withOpacity(0.3),
+            color: AppColors.accent.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
@@ -369,7 +377,7 @@ class _VerifyEmailOtpScreenState extends State<VerifyEmailOtpScreen>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(

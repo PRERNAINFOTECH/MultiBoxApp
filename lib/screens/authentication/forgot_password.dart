@@ -68,8 +68,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
 
       final data = json.decode(response.body);
 
+      if (!mounted) return;
       if (response.statusCode == 200) {
-        if (!mounted) return;
         _showSuccessSnackBar("Password reset OTP sent to your email!");
         Navigator.pushReplacement(
           context,
@@ -87,13 +87,17 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         _showErrorSnackBar(error.toString());
       }
     } catch (e) {
+      if (!mounted) return;
       _showErrorSnackBar("Failed to send reset OTP. Please try again.");
     } finally {
-      setState(() => isSubmitting = false);
+      if (mounted) {
+        setState(() => isSubmitting = false);
+      }
     }
   }
 
   void _showSuccessSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -101,7 +105,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.check, color: Colors.white, size: 16),
@@ -119,6 +123,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
   }
 
   void _showErrorSnackBar(String message) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
@@ -126,7 +131,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 shape: BoxShape.circle,
               ),
               child: const Icon(Icons.error_outline, color: Colors.white, size: 16),
@@ -196,7 +201,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withOpacity(0.3),
+            color: AppColors.primary.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
