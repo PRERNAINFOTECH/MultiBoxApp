@@ -6,7 +6,6 @@ import 'screens/authentication/verify_email_otp_screen.dart';
 import 'screens/stocks.dart';
 import 'services/app_initializer.dart';
 import 'theme/app_theme.dart';
-import 'widgets/page_transitions.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
