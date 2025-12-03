@@ -11,7 +11,6 @@ import '../screens/productions.dart';
 import '../screens/productions_archive.dart';
 import '../screens/programs.dart';
 import '../screens/programs_archive.dart';
-import '../screens/plan_support/plans_and_pricing.dart';
 import '../services/subscription_service.dart';
 
 class AppDrawer extends StatefulWidget {
@@ -29,7 +28,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
   final List<AnimationController> _itemControllers = [];
   
   final List<Map<String, dynamic>> _menuItems = [
-    {'id': 'plans', 'icon': Icons.diamond_outlined, 'title': 'Plans & Pricing', 'isPaid': false},
+    // Only show paid feature sections: Stock through Products
     {'id': 'stock', 'icon': Icons.inventory_2_outlined, 'title': 'Stock', 'isPaid': true},
     {
       'id': 'reels',
@@ -313,11 +312,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
           borderRadius: BorderRadius.circular(16),
           onTap: () {
             Navigator.of(context).pop();
-            if (item['id'] == 'plans') {
-              Navigator.of(context).push(
-                _createRoute(const PlansPricingScreen()),
-              );
-            } else if (item['id'] == 'stock') {
+            if (item['id'] == 'stock') {
               if (hasAccess) {
                 Navigator.of(context).push(
                   _createRoute(const StocksScreen()),
@@ -626,9 +621,8 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                       child: ElevatedButton(
                         onPressed: () {
                           Navigator.of(context).pop();
-                          Navigator.of(context).push(
-                            _createRoute(const PlansPricingScreen()),
-                          );
+                          // Navigate to the plans screen via header menu instead;
+                          // drawer itself no longer exposes a direct "Plans & Pricing" entry.
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppColors.primary,

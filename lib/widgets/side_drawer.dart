@@ -63,18 +63,6 @@ class _SideDrawerState extends State<SideDrawer> {
               ),
             ),
 
-            // Plans and Pricing - Always accessible
-            ListTile(
-              leading: const Icon(Icons.credit_card, color: Colors.white),
-              title: const Text('Plans & Pricing', style: TextStyle(color: Colors.white)),
-              onTap: () {
-                Navigator.of(context).pop();
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const PlansPricingScreen()),
-                );
-              },
-            ),
-
             // Stock item without accordion - Paid feature
             ListTile(
               leading: const Icon(Icons.inventory, color: Colors.white),
