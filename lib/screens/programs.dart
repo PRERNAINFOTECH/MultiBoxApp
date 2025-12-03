@@ -103,6 +103,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       );
       await _fetchPrograms();
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text("Failed to delete program."),
@@ -967,6 +968,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
     String notes,
   ) async {
     if (product == null || quantity.isEmpty || date == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please fill all required fields'),
@@ -1016,6 +1018,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       try {
         msg = jsonDecode(resp.body)['detail'] ?? msg;
       } catch (_) {}
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),
@@ -1036,6 +1039,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
     String notes,
   ) async {
     if (product == null || quantity.isEmpty || date == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please fill all required fields'),
@@ -1085,6 +1089,7 @@ class _ProgramsScreenState extends State<ProgramsScreen> {
       try {
         msg = jsonDecode(resp.body)['detail'] ?? msg;
       } catch (_) {}
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),

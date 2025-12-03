@@ -627,6 +627,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
 
   Future<void> _saveProduction(BuildContext dialogContext, String? product, List<String> reels, String qty) async {
     if (product == null || qty.isEmpty) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Please fill all fields.'),
@@ -656,6 +657,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
     if (response.statusCode == 201) {
       Navigator.pop(dialogContext);
       _fetchProductions();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Production added!'),
@@ -666,6 +668,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
       );
     } else {
       final resp = jsonDecode(response.body);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(resp['detail'] ?? 'Failed to add production.'),
@@ -770,6 +773,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
     if (response.statusCode == 200) {
       Navigator.pop(dialogContext);
       _fetchProductions();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Quantity updated!'),
@@ -780,6 +784,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
       );
     } else {
       final resp = jsonDecode(response.body);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(resp['detail'] ?? 'Failed to update quantity.'),
@@ -905,6 +910,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
     if (response.statusCode == 201) {
       Navigator.pop(dialogContext);
       _fetchProductions();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Reel added!'),
@@ -915,6 +921,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
       );
     } else {
       final resp = jsonDecode(response.body);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(resp['detail'] ?? 'Failed to add reel.'),
@@ -989,6 +996,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
     if (response.statusCode == 200) {
       Navigator.pop(dialogContext);
       _fetchProductions();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Production deleted!'),
@@ -999,6 +1007,7 @@ class _ProductionsScreenState extends State<ProductionsScreen> {
       );
     } else {
       final resp = jsonDecode(response.body);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(resp['detail'] ?? 'Failed to delete production.'),
