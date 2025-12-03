@@ -1,10 +1,7 @@
 // API Base URL Configuration
-// TEMP: Point to local Django API for development & testing.
-// - Android emulator: uses 10.0.2.2 to reach host machine's localhost.
-// - If you're testing on a physical device, change this to your machine's LAN IP,
-//   e.g. "http://192.168.0.116:8000".
+// Production: Point to remote hosted API
 const String baseUrl =
-    String.fromEnvironment('BACKEND_URL', defaultValue: "http://10.0.2.2:8000");
+    String.fromEnvironment('BACKEND_URL', defaultValue: "https://api.multibox.co.in");
 
 /// Razorpay public key used by the Flutter app.
 ///
