@@ -711,6 +711,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
     if (!dialogContext.mounted) return;
     if (resp.statusCode == 200) {
       Navigator.pop(dialogContext);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Product updated!'),
@@ -721,6 +722,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
       );
       await _fetchProduct();
     } else {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Update failed!'),
@@ -986,6 +988,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
       if (!dialogContext.mounted) return;
       if (resp.statusCode == 200) {
         Navigator.pop(dialogContext);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Partition updated!'),
@@ -996,6 +999,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
         );
         await _fetchProduct();
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Update failed!'),
@@ -1032,6 +1036,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
       if (!dialogContext.mounted) return;
       if (resp.statusCode == 201) {
         Navigator.pop(dialogContext);
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Partition added!'),
@@ -1042,6 +1047,7 @@ class _ProductsDetailScreenState extends State<ProductsDetailScreen> {
         );
         await _fetchProduct();
       } else {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: const Text('Add failed!'),

@@ -41,6 +41,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         'Authorization': 'Token $authToken',
       },
     );
+    if (!mounted) return;
     if (resp.statusCode == 200) {
       final Map<String, dynamic> body = jsonDecode(resp.body);
       setState(() {
@@ -667,6 +668,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final authToken = prefs.getString('auth_token');
     if (!dialogContext.mounted) return;
     if (authToken == null) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('No Auth Token Found!'),
@@ -739,6 +741,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     if (resp.statusCode == 201) {
       if (!dialogContext.mounted) return;
       Navigator.pop(dialogContext);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: const Text('Product Added Successfully!'),
@@ -754,6 +757,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
         msg = jsonDecode(resp.body)['detail'] ?? msg;
       } catch (_) {}
       if (!dialogContext.mounted) return;
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(msg),
