@@ -240,7 +240,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 12,
                       offset: const Offset(0, 4),
                     ),
@@ -273,8 +273,8 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: hasActiveSubscription
-                            ? AppColors.success.withOpacity(0.2)
-                            : Colors.white.withOpacity(0.15),
+                            ? AppColors.success.withValues(alpha: 0.2)
+                            : Colors.white.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -327,8 +327,8 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
               }
             }
           },
-          splashColor: Colors.white.withOpacity(0.1),
-          highlightColor: Colors.white.withOpacity(0.05),
+          splashColor: Colors.white.withValues(alpha: 0.1),
+          highlightColor: Colors.white.withValues(alpha: 0.05),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
             child: Row(
@@ -337,7 +337,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                   width: 40,
                   height: 40,
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -361,7 +361,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppColors.warning.withOpacity(0.2),
+                          color: AppColors.warning.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Text(
@@ -392,7 +392,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: isExpanded ? Colors.white.withOpacity(0.08) : Colors.transparent,
+        color: isExpanded ? Colors.white.withValues(alpha: 0.08) : Colors.transparent,
         borderRadius: BorderRadius.circular(16),
       ),
       child: Column(
@@ -406,8 +406,8 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                   _currentlyExpandedTileId = isExpanded ? null : id;
                 });
               },
-              splashColor: Colors.white.withOpacity(0.1),
-              highlightColor: Colors.white.withOpacity(0.05),
+              splashColor: Colors.white.withValues(alpha: 0.1),
+              highlightColor: Colors.white.withValues(alpha: 0.05),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                 child: Row(
@@ -416,7 +416,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                       width: 40,
                       height: 40,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Icon(
@@ -441,7 +441,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                         margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         decoration: BoxDecoration(
-                          color: AppColors.warning.withOpacity(0.2),
+                          color: AppColors.warning.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: const Text(
@@ -498,7 +498,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: AppColors.primary.withOpacity(0.3),
+                                color: AppColors.primary.withValues(alpha: 0.3),
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -537,10 +537,10 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
           width: 56,
           height: 56,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.1),
+                        color: Colors.white.withValues(alpha: 0.1),
             shape: BoxShape.circle,
             border: Border.all(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),

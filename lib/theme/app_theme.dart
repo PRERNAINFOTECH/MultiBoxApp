@@ -93,7 +93,7 @@ class AppRadius {
 class AppShadows {
   static List<BoxShadow> get small => [
     BoxShadow(
-      color: AppColors.shadow.withOpacity(0.05),
+      color: AppColors.shadow.withValues(alpha: 0.05),
       blurRadius: 4,
       offset: const Offset(0, 2),
     ),
@@ -101,7 +101,7 @@ class AppShadows {
   
   static List<BoxShadow> get medium => [
     BoxShadow(
-      color: AppColors.shadow.withOpacity(0.08),
+      color: AppColors.shadow.withValues(alpha: 0.08),
       blurRadius: 8,
       offset: const Offset(0, 4),
     ),
@@ -109,7 +109,7 @@ class AppShadows {
   
   static List<BoxShadow> get large => [
     BoxShadow(
-      color: AppColors.shadow.withOpacity(0.12),
+      color: AppColors.shadow.withValues(alpha: 0.12),
       blurRadius: 16,
       offset: const Offset(0, 8),
     ),
@@ -117,7 +117,7 @@ class AppShadows {
   
   static List<BoxShadow> get xl => [
     BoxShadow(
-      color: AppColors.shadow.withOpacity(0.15),
+      color: AppColors.shadow.withValues(alpha: 0.15),
       blurRadius: 24,
       offset: const Offset(0, 12),
     ),
@@ -125,7 +125,7 @@ class AppShadows {
   
   static List<BoxShadow> get colored => [
     BoxShadow(
-      color: AppColors.primary.withOpacity(0.3),
+      color: AppColors.primary.withValues(alpha: 0.3),
       blurRadius: 12,
       offset: const Offset(0, 6),
     ),

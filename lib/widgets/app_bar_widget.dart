@@ -147,8 +147,8 @@ class _AnimatedMenuButtonState extends State<_AnimatedMenuButton>
           height: 44,
           decoration: BoxDecoration(
             color: widget.isDark
-                ? Colors.white.withOpacity(0.15)
-                : AppColors.primary.withOpacity(0.08),
+                ? Colors.white.withValues(alpha: 0.15)
+                : AppColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -218,8 +218,8 @@ class _AnimatedBackButtonState extends State<_AnimatedBackButton>
           height: 44,
           decoration: BoxDecoration(
             color: widget.isDark
-                ? Colors.white.withOpacity(0.15)
-                : AppColors.primary.withOpacity(0.08),
+                ? Colors.white.withValues(alpha: 0.15)
+                : AppColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(
@@ -343,13 +343,13 @@ class _AppBarMenuButtonState extends State<AppBarMenuButton> {
         height: 44,
         decoration: BoxDecoration(
           color: widget.isDark
-              ? Colors.white.withOpacity(0.15)
-              : AppColors.primary.withOpacity(0.08),
+                ? Colors.white.withValues(alpha: 0.15)
+                : AppColors.primary.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: widget.isDark
-                ? Colors.white.withOpacity(0.2)
-                : AppColors.primary.withOpacity(0.2),
+                ? Colors.white.withValues(alpha: 0.2)
+                : AppColors.primary.withValues(alpha: 0.2),
             width: 1.5,
           ),
         ),
