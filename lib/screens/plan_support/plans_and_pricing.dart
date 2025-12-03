@@ -23,7 +23,8 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   bool isMonthly = true;
   bool isLoading = false;
   bool hasActiveSubscription = false;
-  List<Map<String, dynamic>> plans = [];
+  // If available, plans loaded from the API; otherwise we fall back to local `planData`.
+  Map<String, List<Map<String, dynamic>>>? _apiPlanData;
   String? userToken;
   String? userEmail;
   String? userPhone;
@@ -123,15 +124,87 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   Future<void> _initializeScreen() async {
     await _loadUserData();
     await _checkSubscriptionStatus();
+    await _loadPlansFromApi();
   }
 
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      userToken = prefs.getString('token');
+      // Use the same key that is set on successful login
+      // (see `login.dart`, where the value is stored as `auth_token`).
+      userToken = prefs.getString('auth_token');
       userEmail = prefs.getString('email');
       userPhone = prefs.getString('phone');
     });
+  }
+
+  Future<void> _loadPlansFromApi() async {
+    if (userToken == null) return;
+
+    try {
+      final List<dynamic>? rawPlans = await RazorpayService.getPlans(token: userToken!);
+      if (rawPlans == null) return;
+
+      final Map<String, List<Map<String, dynamic>>> transformed = {
+        'monthly': [],
+        'yearly': [],
+      };
+
+      for (final dynamic item in rawPlans) {
+        if (item is! Map<String, dynamic>) continue;
+        final raw = item;
+
+        // Normalise billing cycle coming from the API – treat anything that
+        // isn't explicitly "yearly" as "monthly" so that small discrepancies
+        // in casing/labels don't break the client.
+        final String billingCycleRaw = (raw['billing_cycle'] as String?) ?? 'monthly';
+        final String billingCycle =
+            billingCycleRaw.toLowerCase() == 'yearly' ? 'yearly' : 'monthly';
+        if (!transformed.containsKey(billingCycle)) continue;
+
+        final String name = (raw['name'] as String?) ?? 'STANDARD';
+
+        // `price` comes from Django as a DecimalField which is often serialized
+        // as a JSON string (e.g. "798.00"). Handle both numeric and string
+        // representations safely.
+        final dynamic priceRaw = raw['price'];
+        double? price;
+        if (priceRaw is num) {
+          price = priceRaw.toDouble();
+        } else if (priceRaw is String) {
+          price = double.tryParse(priceRaw);
+        }
+        if (price == null) {
+          debugPrint('Skipping plan with invalid price: $priceRaw');
+          continue;
+        }
+        final List<String> features =
+            (raw['features'] as List<dynamic>? ?? []).map((e) => e.toString()).toList();
+
+        final bool isEnterprise = name.toUpperCase() == 'ENTERPRISE';
+
+        transformed[billingCycle]!.add({
+          'planId': raw['id'],
+          'title': name.toUpperCase(),
+          'displayPrice': '₹${price.toStringAsFixed(0)}',
+          'amountRupees': price,
+          'icon': isEnterprise ? Icons.rocket_launch_outlined : Icons.inventory_2_outlined,
+          'color': isEnterprise ? AppColors.primary : AppColors.info,
+          'popular': isEnterprise,
+          'features': features,
+        });
+      }
+
+      // Even if there are zero plans, store the transformed structure so the
+      // rest of the flow knows that the API call succeeded.
+      if (mounted) {
+        setState(() {
+          _apiPlanData = transformed;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading plans from API: $e');
+    }
   }
 
   Future<void> _checkSubscriptionStatus() async {
@@ -163,14 +236,50 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
     setState(() => isLoading = true);
 
     try {
+      // Ensure we are using server-defined plans so that plan IDs
+      // exactly match what the backend expects.
+      if (_apiPlanData == null) {
+        await _loadPlansFromApi();
+      }
+
+      if (_apiPlanData == null) {
+        Fluttertoast.showToast(msg: 'Unable to load plans from server. Please try again.');
+        return;
+      }
+
+      final String selectedTitle = (plan['title'] as String).toUpperCase();
+      final String billingCycle = isMonthly ? 'monthly' : 'yearly';
+      final List<Map<String, dynamic>> backendPlans =
+          _apiPlanData![billingCycle] ?? <Map<String, dynamic>>[];
+
+      Map<String, dynamic>? backendPlan;
+      for (final p in backendPlans) {
+        final title = (p['title'] as String).toUpperCase();
+        if (title == selectedTitle) {
+          backendPlan = p;
+          break;
+        }
+      }
+
+      if (backendPlan == null) {
+        Fluttertoast.showToast(msg: 'Selected plan is not available on server.');
+        return;
+      }
+
+      final double amountInRupees = (backendPlan['amountRupees'] as num).toDouble();
+      final int planId = backendPlan['planId'] as int;
+
       final orderData = await RazorpayService.createOrder(
-        planId: plan['id'],
-        amount: plan['price'],
+        planId: planId,
+        amount: amountInRupees,
         token: userToken!,
       );
 
-      if (orderData == null) {
-        Fluttertoast.showToast(msg: 'Failed to create order');
+      if (orderData == null || orderData['order_id'] == null) {
+        final errorMessage = (orderData != null && orderData['error'] != null)
+            ? orderData['error'].toString()
+            : 'Failed to create order';
+        Fluttertoast.showToast(msg: errorMessage);
         return;
       }
 
@@ -178,8 +287,8 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
         keyId: config.razorpayKeyId,
         orderId: orderData['order_id'],
         name: 'MultiBox',
-        description: '${plan['name']} Plan - ${isMonthly ? 'Monthly' : 'Yearly'}',
-        amount: plan['price'],
+        description: '${plan['title']} Plan - ${isMonthly ? 'Monthly' : 'Yearly'}',
+        amount: amountInRupees,
         prefillEmail: userEmail ?? '',
         prefillContact: userPhone ?? '',
         options: {},
@@ -382,7 +491,8 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
   }
 
   Widget _buildPlansSection() {
-    var plans = isMonthly ? planData['monthly']! : planData['yearly']!;
+    final source = _apiPlanData ?? planData;
+    var plans = isMonthly ? source['monthly']! : source['yearly']!;
     return LayoutBuilder(
       builder: (context, constraints) {
         bool isMobile = constraints.maxWidth < 600;
@@ -540,24 +650,12 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
                   child: isPopular
                       ? GradientButton(
                           text: hasActiveSubscription ? 'Active Plan' : 'Get Started',
-                          onPressed: hasActiveSubscription
-                              ? null
-                              : () => _handlePayment({
-                                    'id': plan['planId'],
-                                    'name': plan['title'],
-                                    'price': plan['amountPaise'],
-                                  }),
+                          onPressed: hasActiveSubscription ? null : () => _handlePayment(plan),
                           icon: hasActiveSubscription ? Icons.check : Icons.arrow_forward,
                           isLoading: isLoading,
                         )
                       : OutlinedButton(
-                          onPressed: hasActiveSubscription
-                              ? null
-                              : () => _handlePayment({
-                                    'id': plan['planId'],
-                                    'name': plan['title'],
-                                    'price': plan['amountPaise'],
-                                  }),
+                          onPressed: hasActiveSubscription ? null : () => _handlePayment(plan),
                           style: OutlinedButton.styleFrom(
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             side: BorderSide(color: hasActiveSubscription ? AppColors.textLight : planColor),
