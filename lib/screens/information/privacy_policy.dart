@@ -106,7 +106,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionContent(
-            "At Multibox, accessible from www.multibox.co.in, we prioritize the privacy and security of our users' information. This Privacy Policy outlines how we collect, use, and protect your data when you use our website and services. By accessing or using Multibox, you agree to the terms of this Privacy Policy.",
+            "At C.Box, accessible from www.multibox.co.in, we prioritize the privacy and security of our users' information. This Privacy Policy outlines how we collect, use, and protect your data when you use our website and services. By accessing or using C.Box, you agree to the terms of this Privacy Policy.",
           ),
           _sectionHeading("1. Information We Collect"),
           _sectionSubheading("a) Personal Information"),
@@ -118,11 +118,11 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
           ]),
           _sectionSubheading("b) Product and Stock Data"),
           _sectionContent(
-            "As part of providing our stock and product management services, we collect and store data related to the products, inventory, and stock levels that you manage using the Multibox platform.",
+            "As part of providing our stock and product management services, we collect and store data related to the products, inventory, and stock levels that you manage using the C.Box platform.",
           ),
           _sectionHeading("2. How We Use Your Information"),
           _bulletList([
-            "To provide and maintain the Multibox service",
+            "To provide and maintain the C.Box service",
             "To process transactions and manage billing",
             "To communicate with you, including sending updates and notifications",
             "To improve our website and services based on user feedback",
@@ -158,7 +158,7 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen> {
             "We use cookies and similar tracking technologies to enhance your experience on our website. Cookies are small text files stored on your device that help us recognize you when you return to the site.",
           ),
           _sectionContent(
-            "You can control or delete cookies through your browser settings. However, please note that disabling cookies may affect your ability to use certain features of the Multibox service.",
+            "You can control or delete cookies through your browser settings. However, please note that disabling cookies may affect your ability to use certain features of the C.Box service.",
           ),
           _sectionHeading("7. Data Retention"),
           _sectionContent(

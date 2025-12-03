@@ -106,7 +106,7 @@ class _TermsConditionsScreenState extends State<TermsConditionsScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionContent(
-            "Welcome to Multibox (\"Website\"), owned and operated by PRERNA INFOTECH (referred to as \"we,\" \"us,\" or \"our\"). By accessing or using our website, you agree to comply with and be bound by these Terms and Conditions. Please read them carefully before using the site. If you do not agree to these terms, you should not use this website.",
+            "Welcome to C.Box (\"Website\"), owned and operated by PRERNA INFOTECH (referred to as \"we,\" \"us,\" or \"our\"). By accessing or using our website, you agree to comply with and be bound by these Terms and Conditions. Please read them carefully before using the site. If you do not agree to these terms, you should not use this website.",
           ),
           _sectionHeading("1. Acceptance of Terms"),
           _sectionContent(

@@ -48,7 +48,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                             child: _buildInfoCard(
                               icon: Icons.info_outline,
                               title: 'About Us',
-                              content: 'Multibox is a Software as a Service (SaaS) platform that provides the best automated software for corrugated manufacturers to manage their stocks, products, production line, and much more. This includes reels inventory management with reel stock and summaries to easily organize their materials and products. Manufacturers can focus on their unit while the handling is done by the app, saving time and money.',
+                              content: 'C.Box is a Software as a Service (SaaS) platform that provides the best automated software for corrugated manufacturers to manage their stocks, products, production line, and much more. This includes reels inventory management with reel stock and summaries to easily organize their materials and products. Manufacturers can focus on their unit while the handling is done by the app, saving time and money.',
                               color: AppColors.primary,
                             ),
                           ),
@@ -58,7 +58,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                             child: _buildInfoCard(
                               icon: Icons.flag_outlined,
                               title: 'Our Mission',
-                              content: 'Our mission at Multibox is to provide the best automated software as a service for as many corrugation manufacturers as possible. We aim to empower manufacturers to streamline their operations, reduce costs, and increase efficiency by providing them with the services they need to succeed. We are committed to helping our clients achieve their goals by giving them software that is easy to use, reliable, and cost-effective.',
+                              content: 'Our mission at C.Box is to provide the best automated software as a service for as many corrugation manufacturers as possible. We aim to empower manufacturers to streamline their operations, reduce costs, and increase efficiency by providing them with the services they need to succeed. We are committed to helping our clients achieve their goals by giving them software that is easy to use, reliable, and cost-effective.',
                               color: AppColors.success,
                             ),
                           ),
@@ -68,7 +68,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
                             child: _buildInfoCard(
                               icon: Icons.visibility_outlined,
                               title: 'Our Vision',
-                              content: 'Our vision at Multibox is to become the leading provider of automated software for corrugation manufacturers. We aim to be the go-to solution for manufacturers looking to streamline their operations, reduce costs, and increase efficiency. We are committed to providing our clients with the best possible service and support, and to helping them achieve their goals by giving them the tools they need to succeed.',
+                              content: 'Our vision at C.Box is to become the leading provider of automated software for corrugation manufacturers. We aim to be the go-to solution for manufacturers looking to streamline their operations, reduce costs, and increase efficiency. We are committed to providing our clients with the best possible service and support, and to helping them achieve their goals by giving them the tools they need to succeed.',
                               color: AppColors.info,
                             ),
                           ),
@@ -110,7 +110,7 @@ class _AboutUsScreenState extends State<AboutUsScreen> {
         ),
         const SizedBox(height: 20),
         Text(
-          'MultiBox',
+          'C.Box',
           style: AppTextStyles.displaySmall.copyWith(fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 8),

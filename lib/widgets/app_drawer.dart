@@ -259,7 +259,7 @@ class _AppDrawerState extends State<AppDrawer> with TickerProviderStateMixin {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'MultiBox',
+                      'C.Box',
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 24,

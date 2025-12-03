@@ -106,13 +106,13 @@ class _RefundPolicyScreenState extends State<RefundPolicyScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _sectionContent(
-            "At Prerna Infotech, we aim to ensure the satisfaction of our users with the services provided by Multibox, our platform for corrugated manufacturers. This Refund Policy explains the conditions under which refunds may be issued and the procedures for requesting them. By using Multibox, you agree to the terms of this Refund Policy.",
+            "At Prerna Infotech, we aim to ensure the satisfaction of our users with the services provided by C.Box, our platform for corrugated manufacturers. This Refund Policy explains the conditions under which refunds may be issued and the procedures for requesting them. By using C.Box, you agree to the terms of this Refund Policy.",
           ),
           _sectionHeading("1. Eligibility for Refunds", Icons.check_circle_outline, AppColors.success),
           _bulletList([
             "If a request for a refund is made within 7 days of the original transaction.",
-            "If the user experiences a technical issue with the Multibox platform that cannot be resolved within a reasonable time frame.",
-            "If the Multibox service is discontinued or is unavailable for an extended period beyond what is reasonable.",
+            "If the user experiences a technical issue with the C.Box platform that cannot be resolved within a reasonable time frame.",
+            "If the C.Box service is discontinued or is unavailable for an extended period beyond what is reasonable.",
           ]),
           _sectionHeading("2. Non-Refundable Situations", Icons.cancel_outlined, AppColors.error),
           _bulletList([
@@ -133,7 +133,7 @@ class _RefundPolicyScreenState extends State<RefundPolicyScreen> {
           ),
           _sectionHeading("5. Cancellations", Icons.event_busy_outlined, AppColors.warning),
           _bulletList([
-            "If the cancellation request is made within 7 days of placing the order for the Multibox service.",
+            "If the cancellation request is made within 7 days of placing the order for the C.Box service.",
             "If no significant portion of the service has been accessed, downloaded, or used by the customer.",
           ]),
           _sectionHeading("6. Issues with Products and Services", Icons.build_outlined, AppColors.textSecondary),

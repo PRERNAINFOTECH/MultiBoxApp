@@ -256,7 +256,7 @@ class _SignupScreenState extends State<SignupScreen>
         ),
         const SizedBox(height: 8),
         Text(
-          'Sign up to get started with MultiBox',
+          'Sign up to get started with C.Box',
           style: AppTextStyles.bodyMedium.copyWith(
             color: AppColors.textSecondary,
           ),

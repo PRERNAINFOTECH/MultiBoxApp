@@ -143,7 +143,7 @@ class _FAQsScreenState extends State<FAQsScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          'Find answers to common questions about MultiBox',
+          'Find answers to common questions about C.Box',
           style: AppTextStyles.bodyMedium.copyWith(color: AppColors.textLight),
           textAlign: TextAlign.center,
         ),

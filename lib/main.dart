@@ -48,7 +48,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'MultiBox',
+      title: 'C.Box',
       theme: AppTheme.lightTheme.copyWith(
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: {
@@ -171,7 +171,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                       ),
                       const SizedBox(height: 24),
                       Text(
-                        'MultiBox',
+                        'C.Box',
                         style: AppTextStyles.displaySmall.copyWith(
                           fontWeight: FontWeight.bold,
                           color: AppColors.primary,

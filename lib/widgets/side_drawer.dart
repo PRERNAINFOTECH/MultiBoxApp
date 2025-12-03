@@ -52,7 +52,7 @@ class _SideDrawerState extends State<SideDrawer> {
                   Image.asset('assets/logo.png', height: 50),
                   const SizedBox(width: 10),
                   const Text(
-                    'MultiBox',
+                    'C.Box',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 25,

@@ -286,7 +286,7 @@ class _PlansPricingScreenState extends State<PlansPricingScreen> {
       RazorpayService.openPayment(
         keyId: config.razorpayKeyId,
         orderId: orderData['order_id'],
-        name: 'MultiBox',
+        name: 'C.Box',
         description: '${plan['title']} Plan - ${isMonthly ? 'Monthly' : 'Yearly'}',
         amount: amountInRupees,
         prefillEmail: userEmail ?? '',
